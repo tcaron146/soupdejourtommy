@@ -1,23 +1,8 @@
 import ForumPost from "@/app/components/ForumPost";
+import { redirect } from "next/navigation";
+
+// Page component for the Forum section
 
 export default function ForumPage() {
-
-  const title = "A Perfect Bozeman Weekend";
-
-  const content = `The morning started like every true powder morning in Bozeman should: no texts, no coordination, no mercy, because there are absolutely no friends on a powder day. Bridger dropped eighteen inches overnight and that meant one thing—grab your gear, slam a coffee that tastes like battery acid, and rip out the door before anyone else even remembers they exist. The canyon was already turning into a whiteout disaster when we pulled in, snow blasting sideways, wind smacking the truck around like a toy, visibility dropping to maybe five feet if you squinted hard enough. Peak Montana. We hiked the Ridge anyway because what else are you supposed to do when the snow gods have clearly chosen violence. The wind at the top was next-level chaos, the kind where your jacket flaps so hard it sounds like you're getting shot. Every few steps the gusts tried to knock us off the bootpack and into the abyss, but we just kept going, half-laughing, half-swearing. My buddy Cornus was behind me, muttering prayers to his skins—he calls them Pomoca like they’re a living being, and honestly the way he treats them like a childhood pet had me convinced she was the only reason he made it up that ridge. We dropped in blind, straight into deep white-room turns where you couldn’t see the ground or your skis or your life decisions. Faceshots every other second, snow blasting up your nose, legs burning, brain emptying in the best possible way. It was one of those runs where you don’t even talk after; you just start laughing like you got away with something illegal.
-
-Naturally, we finished the run nearly frozen solid and did the responsible thing and drove straight to MAP Brewing. We walked in like survivors of a small-scale natural disaster—frozen eyebrows, hair crusted in snow, jackets dripping all over their nice floor. I ordered a Midas Crush because that’s just what you do, and we inhaled two orders of poutine so fast it felt like a competitive eating event. Someone put Colter Wall on in the background, that deep gravelly voice echoing off the windows, and suddenly it all felt cinematic—snow hammering the lake outside, beers glowing warm in our hands, our beanies sitting way too high on our skulls because that’s how you signal to the world that you’re in for a night. It didn’t take long for someone to suggest Bucket Night, and by the time the words were spoken we were already grabbing our jackets.
-
-Bucket Night was in full chaos mode—loud music, sticky floors, people still wearing their bibs because Bozeman nightlife exists in a universe where ski gear IS formalwear. We mixed with the crowd, trading stories about airs that definitely didn’t happen and lines that probably shouldn’t have been skied. Buckets went down dangerously fast. Halfway through the night I realized I had forgotten both my Blundstones and my perfectly broken-in Carhartt double-knee pants at home, and I felt spiritually naked, but the buckets didn’t care and neither did anyone else. Cornus kept talking to Pomoca like she was a war hero who carried him through the storm, and honestly no one questioned it.
-
-Morning dropped on us like a punishment. The hangover was violent and biblical. But Bozeman has two cures—burritos or suffering—and since we apparently hate ourselves, we picked suffering and drove to Beehive Basin for a tour. Skinning hungover felt like trying to climb Everest in Crocs. Every step was a hallucination. But the basin opened up at the top, silent and glowing with new snow, and it made the whole previous night’s chaos feel like part of some ritual. The ski down was soft and floating and almost dreamlike, the kind of run that convinces you to forgive your body for everything you put it through.
-
-Naturally, we went straight to Mountains Walking afterward and stuffed ourselves with ramen and pretzels and whatever else they put in front of us. Then, somehow, we found our way to the Legion, devoured popcorn like absolute feral animals, and pulled tabs like we were funding our retirement off luck alone. The night ended at 317 where we split the G, rolled dice, screamed at our losses, celebrated our wins, and kept drinking even though every cell in our bodies begged us not to. At some point Cornus started talking about how Pomoca deserved a statue in downtown Bozeman and honestly after the weekend she had, we all kind of agreed.
-
-And after all that—the whiteout bootpack on the Ridge, the Midas Crush at MAP, the beanies perched dangerously high on our heads, Bucket Night chaos, the hangover skin up Beehive, Colter Wall echoing off the walls, the Legion popcorn, the late-night dice at 317, Cornus preaching the gospel of Pomoca, the forgotten Blundstones and Carhartts, the snow, the suffering, the laughs, the beers—it somehow all made perfect sense. Because that’s the thing about a real Bozeman weekend: it isn’t clean, it isn’t healthy, it isn’t sane, but when you string together powder turns, brewery afternoons, chaotic bar nights, hungover tours, and the right crew of idiots, it becomes perfect in a way nothing planned could ever compete with.
-`;
-
-  return (
-    <ForumPost title={title} content={content} />
-  );
+    redirect("/forum/1");
 }
