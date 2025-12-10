@@ -1,3 +1,4 @@
+// components/Carousel.js
 import React from 'react';
 
 const Carousel = () => {

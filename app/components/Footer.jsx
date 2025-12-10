@@ -1,4 +1,5 @@
 'use client'
+// components/Footer.js
 import React from 'react'
 import MailchimpSubscribe from 'react-mailchimp-subscribe';
 

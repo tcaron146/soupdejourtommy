@@ -1,95 +1,57 @@
 "use client";
-import React from "react";
 import Image from "next/image";
-import fisherman from "../../public/fisherman.jpg";
-import sea from "../../public/sea-7484743_1920.jpg";
-import stew from "../../public/pho.jpg";
-import { useRef, useState } from "react";
+import Link from "next/link";
 import MailchimpSubscribe from "react-mailchimp-subscribe";
-import { InstagramEmbed } from "react-social-media-embed";
+import FeatureCard from "./FeatureCard";
+import fisherman from "../../public/fisherman.jpg";
+import stew from "../../public/pho.jpg";
 
-const Hero = () => {
+export default function Hero() {
   const url = process.env.NEXT_PUBLIC_MAILCHIMP_URL;
 
-  const SimpleForm = () => <MailchimpSubscribe url={url} />;
-
   return (
-    <div className="w-full h-full pb-4">
-      <div className="m-auto">
-        <div className="flex flex-col items-center p-4 justify-around">
-          <h1 className="text-primary">Welcome</h1>
-        </div>
-        {/* Cards */}
-        <div className="flex flex-col items-center justify-around px-6 pb-4 w-full h-full sm:flex sm:flex-row">
-          {/* Card 1*/}
-          <div className="flex flex-col my-4 rounded-lg bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] dark:bg-neutral-700 sm:max-w-xl sm:flex-row">
-            <Image
-              className="h-96 w-full rounded-t-lg object-cover sm:h-auto sm:w-48 sm:rounded-none sm:rounded-l-lg"
-              src={fisherman}
-              alt="fisherman"
-            />
-            <div className="flex flex-col justify-start p-6">
-              <h5 className="mb-2 text-xl font-medium text-neutral-800 dark:text-neutral-50">
-                <a href="../chronicles">Chronicles</a>
-              </h5>
-              <p className="mb-4 text-base text-neutral-600 dark:text-neutral-200">
-                Here you will find some very nice photos and short blurbs
-                regarding past experinces on the water, in the mountains, and
-                many other interesting locations. Enjoy.
-              </p>
-            </div>
-          </div>
-          {/* Card 2*/}
-          <div className="flex flex-col my-4 rounded-lg bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] dark:bg-neutral-700 sm:max-w-xl sm:flex-row">
-            <Image
-              className="h-96 w-full rounded-t-lg object-cover sm:h-auto sm:w-48 sm:rounded-none sm:rounded-l-lg"
-              src={stew}
-              alt="stew"
-            />
-            <div className="flex flex-col justify-start p-6">
-              <h5 className="mb-2 text-xl font-medium text-neutral-800 dark:text-neutral-50">
-                <a href="../grits">Eggs & Bacon</a>
-              </h5>
-              <p className="mb-4 text-base text-neutral-600 dark:text-neutral-200">
-                The most essential thing in life is excellent food and beverage,
-                here are some of my favorite dishes, sandwwiches, and quaffable
-                drinks in recent history.
-              </p>
-            </div>
-          </div>
-        </div>
-        {/* Newsletter div */}
-        <div className="flex items-center justify-around w-full">
-          <div className="p-3 border border-primary/0 rounded-md flex flex-col">
-            <h1 className="text-2xl font-bold text-center text-primary">
-              Subscribe to the Newsletter
-            </h1>
-            <MailchimpSubscribe
-              className="flex flex-col"
-              url={process.env.NEXT_PUBLIC_MAILCHIMP_URL}
-              render={({ subscribe, status, message }) => (
-                <div>
-                  <SimpleForm onSubmitted={(formData) => subscribe(formData)} />
-                  {status === "sending" && (
-                    <div className="text-primary">sending...</div>
-                  )}
-                  {status === "error" && (
-                    <div
-                      style={{ color: "red" }}
-                      dangerouslySetInnerHTML={{ __html: message }}
-                    />
-                  )}
-                  {status === "success" && (
-                    <div style={{ color: "green" }}>Subscribed !</div>
-                  )}
-                </div>
-              )}
-            />
-          </div>
-        </div>
+    <div className="w-full pt-32 pb-16 bg-gradient-to-b from-secondary to-background px-6">
+      {/* Main intro */}
+      <div className="max-w-4xl mx-auto text-center mb-16">
+        <h1 className="text-5xl font-bold text-primary tracking-tight">
+          Welcome to <span className="text-accent">SoupDeJour</span>
+        </h1>
+        <p className="text-lg text-primary/80 mt-4">
+          Stories from the mountains, the kitchen, and everywhere in between.
+        </p>
+
+        <Link
+          href="/blog"
+          className="inline-block mt-6 px-6 py-3 rounded-lg bg-primary text-background font-semibold hover:opacity-90"
+        >
+          Read the Chronicles
+        </Link>
+      </div>
+
+      {/* Two feature cards */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 mb-20">
+        <FeatureCard
+          title="Chronicles"
+          href="/chronicles"
+          description="Short stories and photos from the water, the mountains, and the wild places."
+          image={fisherman}
+        />
+
+        <FeatureCard
+          title="Eggs & Bacon"
+          href="/grits"
+          description="A collection of favorite dishes, sandwiches, and drinks worth trying."
+          image={stew}
+        />
+      </div>
+
+      {/* Newsletter */}
+      <div className="max-w-xl mx-auto text-center bg-white shadow-lg p-6 rounded-xl">
+        <h2 className="text-2xl font-bold text-neutral-900 mb-3">
+          Join the Newsletter
+        </h2>
+        <MailchimpSubscribe url={url} />
       </div>
     </div>
   );
-};
-
-export default Hero;
+}

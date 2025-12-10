@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-
+// components/ScrollSnap.js
 const ScrollSnap = () => {
   return (
     <div className="px-11 py-11">

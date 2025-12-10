@@ -1,3 +1,4 @@
+// components/Button.js
 import Image from "next/image"
 
 const Button = ({ type, title, icon, full }) => {

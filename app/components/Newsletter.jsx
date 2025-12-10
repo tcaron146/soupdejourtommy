@@ -1,4 +1,5 @@
 'use client'
+// components/Newsletter.js
 import React from 'react'
 import { useRef, useState } from 'react';
 import MailchimpSubscribe from 'react-mailchimp-subscribe';
