@@ -44,8 +44,8 @@ export default function Navbar() {
       {/* DESKTOP MENU */}
       <ul className="hidden md:flex items-center gap-8 text-lg">
         <li><Link href="/">Home</Link></li>
-        <li><Link href="/stories">Stories</Link></li>
-        <li><Link href="/reviews">Reviews</Link></li>
+        <li><Link href="/stories" prefetch={false}>Stories</Link></li>
+        <li><Link href="/reviews" prefetch={false}>Reviews</Link></li>
         <li><Link href="/first">First</Link></li>
       </ul>
 

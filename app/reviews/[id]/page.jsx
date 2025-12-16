@@ -1,55 +1,73 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { collection, getDocs, orderBy, query, limit, startAfter } from 'firebase/firestore';
+import { db } from '@/app/firebase';
+import Link from 'next/link';
 
-export const dynamic = 'force-dynamic';
+export default function ReviewsPage() {
+  const [reviews, setReviews] = useState([]);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-export default function ReviewPage() {
-  const [id, setId] = useState(null);
-  const [review, setReview] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  async function loadMore() {
+    if (loading) return;
+    setLoading(true);
 
-  useEffect(() => {
-    // Extract ID from URL path on client side
-    const pathname = window.location.pathname;
-    const reviewId = pathname.split('/').pop();
-    setId(reviewId);
-  }, []);
+    let q = query(
+      collection(db, 'reviews'),
+      orderBy('createdAt', 'desc'),
+      limit(5)
+    );
 
-  useEffect(() => {
-    if (!id) return;
-
-    async function load() {
-      try {
-        const res = await fetch(`/api/reviews/${id}`);
-        if (!res.ok) throw new Error("Failed to load");
-        const data = await res.json();
-        setReview(data);
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+    if (lastDoc) {
+      q = query(
+        collection(db, 'reviews'),
+        orderBy('createdAt', 'desc'),
+        startAfter(lastDoc),
+        limit(5)
+      );
     }
 
-    load();
-  }, [id]);
+    const snap = await getDocs(q);
 
-  if (loading) return <div className="pt-32 text-center text-white">Loading…</div>;
-  if (error) return <div className="pt-32 text-center text-white">Error: {error}</div>;
-  if (!review) return <div className="pt-32 text-center text-white">Not found</div>;
+    setReviews(prev => [
+      ...prev,
+      ...snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    ]);
+
+    setLastDoc(snap.docs[snap.docs.length - 1]);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadMore();
+  }, []);
 
   return (
-    <main className="pt-32 max-w-3xl mx-auto text-white px-4">
-      <h1 className="text-4xl font-bold mb-4">{review.businessName}</h1>
-      <div className="flex items-center gap-2 text-yellow-400 text-xl">
-        {"★".repeat(review.rating)}
-        {"☆".repeat(5 - review.rating)}
-      </div>
-      <p className="text-sm text-white/50 mt-2">{review.date}</p>
-      <p className="mt-6 text-lg leading-relaxed whitespace-pre-line">{review.comment}</p>
+    <main className="pt-32 max-w-3xl mx-auto px-4 text-white">
+      <h1 className="text-3xl font-bold mb-6">Reviews</h1>
+
+      <ul className="space-y-4">
+        {reviews.map(r => (
+          <li key={r.id}>
+            <Link href={`/reviews/${r.id}`} prefetch={false}>
+              <div className="p-4 rounded-lg bg-neutral-900/40 hover:bg-neutral-900">
+                <h2 className="font-semibold">{r.title}</h2>
+                <p className="text-sm text-neutral-400">{r.subtitle}</p>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        onClick={loadMore}
+        disabled={loading}
+        className="mt-6 px-4 py-2 border rounded"
+      >
+        {loading ? 'Loading…' : 'Load more'}
+      </button>
     </main>
   );
 }
