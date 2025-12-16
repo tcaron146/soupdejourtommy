@@ -13,7 +13,6 @@ import {
   getDoc,
   getDocs,
 } from "firebase/firestore";
-import PostCard from "@/app/components/PostCard";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -72,15 +71,6 @@ export default function ProfilePage() {
           <h1 className="text-xl font-semibold">{userInfo.username}</h1>
         </div>
       </div>
-
-      {/* ⭐ SAVED POSTS */}
-      <h2 className="text-lg font-semibold mt-10 mb-3">Saved Posts</h2>
-      {savedPosts.length === 0 && (
-        <p className="text-neutral-500">No saved posts.</p>
-      )}
-      {savedPosts.map((post) => (
-        <PostCard key={post.id} post={post} />
-      ))}
 
     </div>
   );

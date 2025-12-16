@@ -21,7 +21,7 @@ export default function Hero() {
         </p>
 
         <Link
-          href="/blog"
+          href="/stories"
           className="inline-block mt-6 px-6 py-3 rounded-lg bg-primary text-background font-semibold hover:opacity-90"
         >
           Read the Chronicles
@@ -32,7 +32,7 @@ export default function Hero() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 mb-20">
         <FeatureCard
           title="Chronicles"
-          href="/forum"
+          href="/stories"
           description="Short stories and photos from the water, the mountains, and the wild places."
           image={fisherman}
         />

@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images: { unoptimized: true }
+  experimental: {
+    skipMiddlewareUrlNormalize: true,
+  },
 };
 
-module.exports = nextConfig
+module.exports = nextConfig;

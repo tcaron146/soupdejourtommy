@@ -10,7 +10,7 @@ export default function StoryNav({ prev, next }) {
       {/* Previous */}
       {prev ? (
         <Link 
-          href={`/forum/${prev.id}`}
+          href={`/stories/${prev.id}`}
           className="text-neutral-400 hover:text-white text-sm flex items-center gap-2"
         >
           <span className="text-xl">←</span> {prev.title}
@@ -22,7 +22,7 @@ export default function StoryNav({ prev, next }) {
       {/* Next */}
       {next ? (
         <Link 
-          href={`/forum/${next.id}`}
+          href={`/stories/${next.id}`}
           className="text-neutral-400 hover:text-white text-sm flex items-center gap-2"
         >
           {next.title} <span className="text-xl">→</span>
