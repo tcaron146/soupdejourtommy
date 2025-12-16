@@ -32,14 +32,14 @@ export default function Hero() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 mb-20">
         <FeatureCard
           title="Chronicles"
-          href="/chronicles"
+          href="/forum"
           description="Short stories and photos from the water, the mountains, and the wild places."
           image={fisherman}
         />
 
         <FeatureCard
           title="Eggs & Bacon"
-          href="/grits"
+          href="/reviews"
           description="A collection of favorite dishes, sandwiches, and drinks worth trying."
           image={stew}
         />

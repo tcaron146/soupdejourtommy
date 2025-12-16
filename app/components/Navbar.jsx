@@ -45,7 +45,7 @@ export default function Navbar() {
       <ul className="hidden md:flex items-center gap-8 text-lg">
         <li><Link href="/">Home</Link></li>
         <li><Link href="/forum">Forum</Link></li>
-        <li><Link href="/blog">Blog</Link></li>
+        <li><Link href="/reviews">Reviews</Link></li>
         <li><Link href="/first">First</Link></li>
       </ul>
 
