@@ -1,0 +1,134 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: 0 0 0;
+    --color-btns: 62 60 185;
+    --color-secondary: 255 255 255;
+    --color-bkg2: 255 255 255;
+    --color-btnText: 255 255 255;
+    --color-tertiary: 62 60 185;
+    --color-highlights: 168 85 247;
+    --color-input: 255 255 255;
+    --color-pinkish: 236 72 153;
+    --color-permblack: 10 10 10;
+    --color-mellowblue: 173 216 230;
+    --color-darkmellowblue: 70 130 180;
+    --color-mellowgreen: 144 238 144;
+    --color-darkmellowgreen: 34 139 34;
+    --color-mellowpurple: 147 112 219;
+    --color-darkmellowpurple: 128 0 128;
+    --color-mellowred: 255 99 71;
+    --color-darkmellowred: 139 0 0;
+    --color-mellowturquoise: 64 224 208;
+    --color-darkmellowturquoise: 0 139 139;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-primary: 255 255 255;
+      --color-btns: 3 218 197;
+      --color-secondary: 18 18 18;
+      --color-bkg2:10 10 10;
+      --color-btnText: 255 255 255;
+      --color-tertiary: 187 134 252;
+      --color-highlights: 168 85 247;
+      --color-input: 255 255 255;
+      --color-pinkish: 236 72 153;
+      --color-permblack: 10 10 10;
+      --color-mellowblue: 128 0 128;
+      --color-darkmellowblue: 128 0 128;
+      --color-mellowgreen: 128 0 128;
+      --color-darkmellowgreen: 128 0 128;
+      --color-mellowpurple: 128 0 128;
+      --color-darkmellowpurple: 128 0 128;
+      --color-mellowred: 128 0 128;
+      --color-darkmellowred: 128 0 128;
+      --color-mellowturquoise: 128 0 128;
+      --color-darkmellowturquoise: 128 0 128;
+    }
+  }
+  :root[data-theme="dark"] {
+    --color-primary: 255 255 255;
+    --color-btns: 3 218 197;
+    --color-secondary: 18 18 18;
+    --color-bkg2: 10 10 10;
+    --color-btnText: 255 255 255;
+    --color-tertiary: 187 134 252;
+    --color-highlights: 168 85 247;
+    --color-input: 255 255 255;
+    --color-pinkish: 236 72 153;
+    --color-permblack: 10 10 10;
+    --color-mellowblue: 128 0 128;
+    --color-darkmellowblue: 128 0 128;
+    --color-mellowgreen: 128 0 128;
+    --color-darkmellowgreen: 128 0 128;
+    --color-mellowpurple: 128 0 128;
+    --color-darkmellowpurple: 128 0 128;
+    --color-mellowred: 128 0 128;
+    --color-darkmellowred: 128 0 128;
+    --color-mellowturquoise: 128 0 128;
+    --color-darkmellowturquoise: 128 0 128;
+  }
+}
+
+@layer utilities {
+  .max-container {
+    @apply mx-auto max-w-[100%];
+  }
+
+  .padding-container {
+    @apply px-6 lg:px-20;
+  }
+
+  .flexCenter {
+    @apply flex items-center justify-around;
+  }
+
+  .flexBetween {
+    @apply flex items-center justify-between;
+  }
+
+  .flexStart {
+    @apply flex items-center justify-start;
+  }
+
+  .flexEnd {
+    @apply flex items-center justify-end;
+  }
+
+  .regular-16 {
+    @apply text-[16px] font-[400];
+  }
+
+  .bold-16 {
+    @apply text-[16px] font-[700];
+  }
+
+  button{
+    @apply border shadow-lg p-3 w-full mt-2 rounded-sm font-bold;
+  }
+
+  input{
+    @apply border shadow-lg p-3 w-full my-2 rounded-sm;
+  }
+
+  h1{
+    @apply text-3xl sm:text-4xl font-bold;
+  }
+
+  body{
+    @apply font-[Poppins];
+  }
+
+  li{
+    @apply p-4 font-semibold;
+  }
+  
+  .icon{
+    @apply text-2xl cursor-pointer;
+  }
+}
