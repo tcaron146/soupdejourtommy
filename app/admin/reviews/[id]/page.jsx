@@ -13,7 +13,7 @@ const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 const ALL_TAGS = [
   'Pizza', 'Burgers', 'Sandwiches', 'Seafood', 'Sushi', 'Italian',
   'Mexican', 'Brunch', 'Coffee', 'Cocktails', 'Dessert', 'Steakhouse',
-  'Thai', 'Tacos', 'Ramen', 'BBQ',
+  'Thai', 'Tacos', 'Ramen', 'BBQ', 'Chinese',
 ];
 
 function tsToDateInput(ts) {
