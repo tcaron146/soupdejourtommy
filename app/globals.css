@@ -109,7 +109,7 @@
   }
 
   button{
-    @apply border shadow-lg p-3 w-full mt-2 rounded-sm font-bold;
+    @apply border shadow-lg p-3 w-full mt-2 rounded-sm font-bold text-white;
   }
 
   input{
