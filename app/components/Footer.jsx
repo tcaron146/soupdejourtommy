@@ -20,7 +20,7 @@ const Footer = () => {
             <div>
               <SimpleForm onSubmitted={formData => subscribe(formData)} />
               {status === "sending" && <div className='primary'>sending...</div>}
-              {status === "error" && <div style={{ color: "red" }} dangerouslySetInnerHTML={{__html: message}}/>}
+              {status === "error" && <div style={{ color: "red" }}>{typeof message === "string" ? message.replace(/<[^>]*>/g, "") : "An error occurred."}</div>}
               {status === "success" && <div style={{ color: "green" }}>Subscribed !</div>}
             </div>
           )}/>
