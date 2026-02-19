@@ -7,7 +7,7 @@ import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore
 import { UserAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 
-const ADMIN_UID = '0pAMwWMZhIZ21qGsQLqNYFrveLd2';
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
 function tsToDateInput(ts) {
   if (!ts) return new Date().toISOString().split('T')[0];

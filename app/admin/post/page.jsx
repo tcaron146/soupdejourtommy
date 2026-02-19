@@ -15,7 +15,7 @@ export default function AdminPostPage() {
   const [error, setError] = useState("");
 
   // only let Tom post
-  const ADMIN_UID = "0pAMwWMZhIZ21qGsQLqNYFrveLd2";
+  const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
   if (!user || user.uid !== ADMIN_UID)
     return <p className="pt-32 text-center">Unauthorized</p>;

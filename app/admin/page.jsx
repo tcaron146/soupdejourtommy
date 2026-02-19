@@ -6,7 +6,7 @@ import { UserAuth } from '@/app/context/AuthContext';
 import { db } from '@/app/firebase';
 import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
 
-const ADMIN_UID = '0pAMwWMZhIZ21qGsQLqNYFrveLd2';
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
 // ── Login form shown when not authenticated ───────────────────────────────────
 function LoginForm() {
