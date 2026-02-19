@@ -14,6 +14,18 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import StoryNav from '@/app/components/StoryNav';
 
+function Stars({ rating }) {
+  return (
+    <span className="flex gap-1">
+      {[1, 2, 3, 4, 5].map(i => (
+        <span key={i} className={i <= rating ? 'text-yellow-400' : 'text-neutral-700'} style={{fontSize: '16px'}}>
+          ★
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export default function ReviewDetailPage() {
   const { id } = useParams();
   const [review, setReview] = useState(null);
@@ -70,44 +82,76 @@ export default function ReviewDetailPage() {
 
   if (loading) {
     return (
-      <main className="pt-32 max-w-3xl mx-auto px-4 text-white">
-        <p className="text-neutral-400">Loading review…</p>
+      <main className="pt-32 max-w-2xl mx-auto px-6">
+        <div className="animate-pulse space-y-4 mt-8">
+          <div className="h-3 w-24 bg-neutral-800 rounded" />
+          <div className="h-10 w-2/3 bg-neutral-800 rounded mt-8" />
+          <div className="flex gap-1 mt-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="w-4 h-4 bg-neutral-800 rounded-sm" />
+            ))}
+          </div>
+          <div className="space-y-3 mt-10">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-4 bg-neutral-800 rounded w-full" />
+            ))}
+          </div>
+        </div>
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="pt-32 max-w-3xl mx-auto px-4 text-white">
+      <main className="pt-32 max-w-2xl mx-auto px-6 text-white">
         <p className="text-red-400">{error}</p>
-        <Link href="/reviews" className="underline mt-4 inline-block">
-          ← Back to reviews
+        <Link href="/reviews" className="text-sm text-highlights hover:underline mt-4 inline-block">
+          ← Back to Reviews
         </Link>
       </main>
     );
   }
 
   return (
-    <main className="pt-32 max-w-3xl mx-auto px-4 text-white">
-      <Link href="/reviews" className="text-sm underline text-neutral-400">
-        ← Back to reviews
+    <main className="pt-28 max-w-2xl mx-auto px-6 pb-20">
+
+      {/* Breadcrumb */}
+      <Link
+        href="/reviews"
+        className="inline-flex items-center gap-1.5 text-xs text-neutral-600
+                   hover:text-neutral-300 transition-colors duration-200 mb-10"
+      >
+        ← Reviews
       </Link>
 
-      <h1 className="text-3xl font-bold mt-4">{review.businessName}</h1>
-
-      <p className="mt-4 text-neutral-300 whitespace-pre-line">
-        {review.comment}
-      </p>
-
-      <p className="mt-6 text-sm text-neutral-400">
-        Rating: {review.rating} ⭐
-      </p>
-
-      {review.date && (
-        <p className="text-xs text-neutral-500 mt-2">
-          {review.date.toDate().toLocaleDateString()}
+      {/* Header */}
+      <header className="mb-10 pb-8 border-b border-neutral-800/60">
+        <p className="text-xs uppercase tracking-[0.2em] text-highlights font-semibold mb-4">
+          Food Review
         </p>
-      )}
+        <h1 className="font-bold text-white leading-tight tracking-tight
+                        text-4xl sm:text-5xl">
+          {review.businessName}
+        </h1>
+        <div className="flex items-center gap-4 mt-4 flex-wrap">
+          <Stars rating={review.rating} />
+          {review.date && (
+            <span className="text-sm text-neutral-600">
+              {review.date.toDate().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
+          )}
+        </div>
+      </header>
+
+      {/* Content */}
+      <div className="text-neutral-300 text-[17px] leading-8 whitespace-pre-line
+                      tracking-[0.01em]">
+        {review.comment}
+      </div>
 
       <StoryNav prev={prevReview} next={nextReview} basePath="/reviews" />
     </main>

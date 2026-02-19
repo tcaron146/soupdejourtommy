@@ -11,6 +11,7 @@ import {
   query,
 } from "firebase/firestore";
 import { db } from "@/app/firebase";
+import Link from "next/link";
 import StoryNav from "@/app/components/StoryNav";
 
 export default function StoryPage() {
@@ -60,18 +61,68 @@ export default function StoryPage() {
   }, [id]);
 
   if (loading) {
-    return <div className="pt-32 text-white text-center">Loading…</div>;
+    return (
+      <main className="pt-32 max-w-2xl mx-auto px-6">
+        <div className="animate-pulse space-y-4 mt-8">
+          <div className="h-3 w-24 bg-neutral-800 rounded" />
+          <div className="h-10 w-3/4 bg-neutral-800 rounded mt-8" />
+          <div className="h-4 w-1/3 bg-neutral-800 rounded" />
+          <div className="space-y-3 mt-10">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-4 bg-neutral-800 rounded w-full" />
+            ))}
+          </div>
+        </div>
+      </main>
+    );
   }
 
   if (!story) {
-    return <div className="pt-32 text-white text-center">Story not found.</div>;
+    return (
+      <main className="pt-32 max-w-2xl mx-auto px-6 text-white">
+        <p className="text-neutral-400">Story not found.</p>
+        <Link href="/stories" className="text-sm text-highlights hover:underline mt-4 inline-block">
+          ← Back to Chronicles
+        </Link>
+      </main>
+    );
   }
 
   return (
-    <article className="pt-32 max-w-3xl mx-auto px-4 text-white">
-      <h1 className="text-3xl font-bold mb-6">{story.title}</h1>
+    <article className="pt-28 max-w-2xl mx-auto px-6 pb-20">
 
-      <div className="mb-12">{story.content}</div>
+      {/* Breadcrumb */}
+      <Link
+        href="/stories"
+        className="inline-flex items-center gap-1.5 text-xs text-neutral-600
+                   hover:text-neutral-300 transition-colors duration-200 mb-10"
+      >
+        ← Chronicles
+      </Link>
+
+      {/* Header */}
+      <header className="mb-10 pb-8 border-b border-neutral-800/60">
+        <p className="text-xs uppercase tracking-[0.2em] text-highlights font-semibold mb-4">
+          Chronicle
+        </p>
+        <h1 className="font-bold text-white leading-tight tracking-tight
+                        text-4xl sm:text-5xl">
+          {story.title}
+        </h1>
+        {story.date && (
+          <p className="text-sm text-neutral-600 mt-4">
+            {story.date.toDate
+              ? story.date.toDate().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+              : story.date}
+          </p>
+        )}
+      </header>
+
+      {/* Content */}
+      <div className="text-neutral-300 text-[17px] leading-8 whitespace-pre-line
+                      [&>p]:mb-6 tracking-[0.01em]">
+        {story.content}
+      </div>
 
       <StoryNav prev={prevStory} next={nextStory} />
     </article>

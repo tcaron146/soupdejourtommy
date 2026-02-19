@@ -93,52 +93,72 @@ export default function Navbar() {
       {/* MOBILE MENU */}
       <div
         ref={navRef}
-        className={`absolute bg-secondary w-full left-0 top-20 shadow-xl transition-all duration-300 md:hidden ${
-          nav ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`absolute bg-secondary w-full left-0 top-20 border-t border-neutral-800/60
+                    shadow-2xl transition-all duration-300 ease-out md:hidden
+                    ${nav
+                      ? "opacity-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 -translate-y-2 pointer-events-none"
+                    }`}
       >
-        <ul className="flex flex-col gap-4 p-6 text-lg">
+        <nav className="flex flex-col px-6 py-4">
 
-          <Link href="/" onClick={() => setNav(false)}>Home</Link>
-          <Link href="/stories" onClick={() => setNav(false)}>Stories</Link>
-          <Link href="/reviews" onClick={() => setNav(false)}>Reviews</Link>
-          <Link href="/first" onClick={() => setNav(false)}>First</Link>
+          {[
+            { href: "/", label: "Home" },
+            { href: "/stories", label: "Stories" },
+            { href: "/reviews", label: "Reviews" },
+            { href: "/first", label: "First" },
+          ].map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setNav(false)}
+              className="flex items-center justify-between py-4 border-b border-neutral-800/40
+                         text-base font-medium text-neutral-300 hover:text-white
+                         transition-colors duration-150 last:border-0"
+            >
+              {label}
+              <span className="text-neutral-700 text-sm">→</span>
+            </Link>
+          ))}
 
           {/* MOBILE PROFILE */}
           {user && (
             <Link
               href={`/profile/${user.uid}`}
-              className="flex items-center gap-3 mt-4"
+              className="flex items-center gap-3 pt-5 pb-2"
               onClick={() => setNav(false)}
             >
               <img
                 src={avatarSrc}
                 alt={user.username || "profile"}
-                className="w-10 h-10 rounded-full border border-primary/40"
+                className="w-9 h-9 rounded-full border border-neutral-700"
               />
-              <p className="text-primary">{user.username}</p>
+              <p className="text-sm font-medium text-neutral-300">{user.username}</p>
             </Link>
           )}
 
           {/* LOGIN / LOGOUT */}
-          <div className="flex items-center gap-4 pt-4 border-t mt-4">
+          <div className="pt-4 pb-5 mt-1">
             {!user ? (
-              <Link href="/login" onClick={() => setNav(false)}>
+              <Link
+                href="/login"
+                onClick={() => setNav(false)}
+                className="text-sm text-neutral-500 hover:text-white transition-colors duration-150"
+              >
                 Login
               </Link>
             ) : (
               <button
-                onClick={() => {
-                  logOut();
-                  setNav(false);
-                }}
+                onClick={() => { logOut(); setNav(false); }}
+                className="text-sm text-neutral-500 hover:text-white transition-colors
+                           border-0 shadow-none p-0 w-auto mt-0 font-normal"
               >
                 Logout
               </button>
             )}
           </div>
 
-        </ul>
+        </nav>
       </div>
     </div>
   );
