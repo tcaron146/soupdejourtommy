@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import MailchimpSubscribe from "react-mailchimp-subscribe";
 import FeatureCard from "./FeatureCard";
 import fisherman from "../../public/fisherman.jpg";
 import stew from "../../public/pho.jpg";
@@ -118,7 +117,6 @@ function LatestReviews({ reviews }) {
 }
 
 export default function Hero() {
-  const url = process.env.NEXT_PUBLIC_MAILCHIMP_URL;
   const [featuredStory, setFeaturedStory] = useState(null);
   const [latestReviews, setLatestReviews] = useState([]);
 
@@ -207,20 +205,6 @@ export default function Hero() {
             description="A collection of favorite dishes, sandwiches, and drinks worth trying."
             image={stew}
           />
-        </div>
-      </section>
-
-      {/* ── NEWSLETTER ────────────────────────────────────── */}
-      <section className="max-w-xl mx-auto px-6 pb-28">
-        <div className="border border-neutral-800 rounded-2xl p-8 sm:p-10 text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-highlights font-semibold mb-3">
-            Newsletter
-          </p>
-          <h2 className="text-2xl font-bold text-white mb-2">Stay in the loop</h2>
-          <p className="text-neutral-500 text-sm mb-6 max-w-xs mx-auto leading-relaxed">
-            New stories and reviews, straight to your inbox.
-          </p>
-          <MailchimpSubscribe url={url} />
         </div>
       </section>
 
