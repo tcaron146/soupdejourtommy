@@ -26,6 +26,72 @@ function Stars({ rating }) {
   );
 }
 
+function ReviewMedia({ item }) {
+  if (item.type === 'video') {
+    return (
+      <figure className="my-12 w-full overflow-hidden rounded-2xl">
+        <video
+          src={item.url}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full block"
+        />
+      </figure>
+    );
+  }
+  return (
+    <figure className="my-12 w-full overflow-hidden rounded-2xl">
+      <img
+        src={item.url}
+        alt=""
+        className="w-full block object-cover max-h-[70vh]"
+      />
+    </figure>
+  );
+}
+
+function splitIntoChunks(text, n) {
+  if (n <= 1) return [text];
+  const chunkSize = Math.ceil(text.length / n);
+  const chunks = [];
+  let pos = 0;
+
+  for (let i = 0; i < n; i++) {
+    if (pos >= text.length) { chunks.push(''); continue; }
+    if (i === n - 1) { chunks.push(text.slice(pos).trim()); break; }
+    let end = Math.min(pos + chunkSize, text.length);
+    while (end < text.length && text[end] !== ' ' && text[end] !== '\n') end++;
+    chunks.push(text.slice(pos, end).trim());
+    pos = end + 1;
+  }
+
+  return chunks;
+}
+
+const TEXT_CLASS = 'text-neutral-300 text-[17px] leading-8 whitespace-pre-line tracking-[0.01em]';
+
+function ReviewContent({ comment, media = [] }) {
+  if (!media.length) {
+    return <div className={TEXT_CLASS}>{comment}</div>;
+  }
+
+  const chunks = splitIntoChunks(comment, media.length + 1);
+
+  return (
+    <div>
+      {media.map((item, i) => (
+        <div key={i}>
+          {chunks[i] && <div className={`${TEXT_CLASS} mb-2`}>{chunks[i]}</div>}
+          <ReviewMedia item={item} />
+        </div>
+      ))}
+      {chunks[media.length] && <div className={TEXT_CLASS}>{chunks[media.length]}</div>}
+    </div>
+  );
+}
+
 export default function ReviewDetailPage() {
   const { id } = useParams();
   const [review, setReview] = useState(null);
@@ -147,11 +213,8 @@ export default function ReviewDetailPage() {
         </div>
       </header>
 
-      {/* Content */}
-      <div className="text-neutral-300 text-[17px] leading-8 whitespace-pre-line
-                      tracking-[0.01em]">
-        {review.comment}
-      </div>
+      {/* Content + Media */}
+      <ReviewContent comment={review.comment} media={review.media} />
 
       <StoryNav prev={prevReview} next={nextReview} basePath="/reviews" />
     </main>

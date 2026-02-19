@@ -131,30 +131,44 @@ export default function ReviewsPage() {
               </p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filtered.map(r => (
-                <Link key={r.id} href={`/reviews/${r.id}`} prefetch={false}>
-                  <div className="group p-5 rounded-xl border border-neutral-800 bg-neutral-900/20
-                                  hover:bg-neutral-900/60 hover:border-neutral-700
-                                  transition-all duration-200 h-full flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <h2 className="font-semibold text-white leading-tight text-sm">
-                        {r.businessName}
-                      </h2>
-                      <Stars rating={r.rating} />
+              {filtered.map(r => {
+                const thumb = r.media?.find(m => m.type === 'image');
+                return (
+                  <Link key={r.id} href={`/reviews/${r.id}`} prefetch={false}>
+                    <div className="group rounded-xl border border-neutral-800 bg-neutral-900/20
+                                    hover:bg-neutral-900/60 hover:border-neutral-700
+                                    transition-all duration-200 h-full flex flex-col overflow-hidden">
+                      {thumb && (
+                        <div className="w-full aspect-video overflow-hidden">
+                          <img
+                            src={thumb.url}
+                            alt=""
+                            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+                      <div className="p-5 flex flex-col gap-3 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h2 className="font-semibold text-white leading-tight text-sm">
+                            {r.businessName}
+                          </h2>
+                          <Stars rating={r.rating} />
+                        </div>
+                        {r.comment && (
+                          <p className="text-xs text-neutral-500 line-clamp-3 flex-1 leading-relaxed">
+                            {r.comment}
+                          </p>
+                        )}
+                        {r.date && (
+                          <p className="text-[11px] text-neutral-700">
+                            {r.date.toDate().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    {r.comment && (
-                      <p className="text-xs text-neutral-500 line-clamp-3 flex-1 leading-relaxed">
-                        {r.comment}
-                      </p>
-                    )}
-                    {r.date && (
-                      <p className="text-[11px] text-neutral-700">
-                        {r.date.toDate().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                      </p>
-                    )}
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </>
         )}
