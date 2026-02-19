@@ -201,6 +201,7 @@ export default function ProfilePage() {
           userId={userId}
           currentBio={userInfo.bio}
           currentAvatar={userInfo.avatarUrl}
+          currentUsername={userInfo.username}
           onClose={() => setShowEditModal(false)}
         />
       )}

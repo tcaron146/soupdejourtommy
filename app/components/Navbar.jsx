@@ -3,8 +3,6 @@
 import { useRef, useState, useEffect } from "react";
 import { HiOutlineMenuAlt4 } from "react-icons/hi";
 import { AiOutlineClose } from "react-icons/ai";
-import { BsSearch } from "react-icons/bs";
-import { FaInstagram } from "react-icons/fa";
 import Link from "next/link";
 import { UserAuth } from "@/app/context/AuthContext";
 
@@ -45,12 +43,6 @@ export default function Navbar() {
 
       {/* DESKTOP RIGHT SIDE */}
       <div className="hidden md:flex items-center gap-5">
-
-        <BsSearch size={20} className="cursor-pointer" />
-
-        <Link href="https://www.instagram.com/soupdejourtommy/">
-          <FaInstagram size={20} className="cursor-pointer" />
-        </Link>
 
         {!authLoading && (
           user ? (
