@@ -60,23 +60,24 @@ export default function Comments({ postId }) {
 
       {!open ? null : (
         <>
-          {/* TOP COMMENT BOX (Reddit-style) */}
-<div className="mt-4">
-  <textarea
-    className="w-full bg-neutral-800 p-3 rounded text-sm resize-none mb-2"
-    rows={3}
-    placeholder="Add a comment…"
-    value={text}
-    onChange={(e) => setText(e.target.value)}
-  />
-
-  <button
-    onClick={submitComment}
-    className="px-3 py-1 bg-secondary text-primary rounded text-sm hover:opacity-80"
-  >
-    Comment
-  </button>
-</div>
+          {/* Comment box — only shown when logged in */}
+          {user && (
+            <div className="mt-4">
+              <textarea
+                className="w-full bg-neutral-800 p-3 rounded text-sm resize-none mb-2"
+                rows={3}
+                placeholder="Add a comment…"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+              />
+              <button
+                onClick={submitComment}
+                className="px-3 py-1 bg-secondary text-primary rounded text-sm hover:opacity-80"
+              >
+                Comment
+              </button>
+            </div>
+          )}
 
 
           <CommentThread
@@ -149,13 +150,15 @@ function CommentItem({ comment, comments, postId }) {
             <span className="text-neutral-300">{comment.text}</span>
           </p>
 
-          {/* Reply link (small text, not a button) */}
-          <span
-            className="text-xs text-neutral-500 hover:text-white cursor-pointer"
-            onClick={() => setReplying(!replying)}
-          >
-            Reply
-          </span>
+          {/* Reply link — only shown when logged in */}
+          {user && (
+            <span
+              className="text-xs text-neutral-500 hover:text-white cursor-pointer"
+              onClick={() => setReplying(!replying)}
+            >
+              Reply
+            </span>
+          )}
 
           {/* CHILD THREAD */}
           <CommentThread
