@@ -37,11 +37,16 @@ export default function ReviewDetailPage() {
         }
 
         setReview({ id: snap.id, ...snap.data() });
+      } catch {
+        setError('Failed to load review');
+      } finally {
+        setLoading(false);
+      }
 
+      try {
         const q = query(
           collection(db, 'reviews'),
-          orderBy('date', 'desc'),
-          orderBy('__name__', 'asc')
+          orderBy('date', 'desc')
         );
 
         const all = await getDocs(q);
@@ -56,9 +61,7 @@ export default function ReviewDetailPage() {
           setNextReview(index < docs.length - 1 ? docs[index + 1] : null);
         }
       } catch {
-        setError('Failed to load review');
-      } finally {
-        setLoading(false);
+        // nav silently fails — review still renders
       }
     }
 

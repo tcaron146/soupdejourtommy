@@ -32,13 +32,15 @@ export default function StoryPage() {
           setLoading(false);
           return;
         }
-
         setStory(snap.data());
+      } finally {
+        setLoading(false);
+      }
 
+      try {
         const q = query(
           collection(db, "stories"),
-          orderBy("date", "asc"),
-          orderBy("__name__", "asc")
+          orderBy("date", "asc")
         );
 
         const all = await getDocs(q);
@@ -49,8 +51,8 @@ export default function StoryPage() {
 
         setPrevStory(index > 0 ? docs[index - 1] : null);
         setNextStory(index < docs.length - 1 ? docs[index + 1] : null);
-      } finally {
-        setLoading(false);
+      } catch {
+        // nav silently fails — story still renders
       }
     }
 
