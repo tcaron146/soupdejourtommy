@@ -12,43 +12,11 @@ function today() {
   return new Date().toISOString().split('T')[0];
 }
 
-function StarPicker({ value, onChange }) {
-  const [hovered, setHovered] = useState(0);
-  const active = hovered || value;
-
-  return (
-    <div className="flex gap-2">
-      {[1, 2, 3, 4, 5].map(i => (
-        <button
-          key={i}
-          type="button"
-          onClick={() => onChange(i)}
-          onMouseEnter={() => setHovered(i)}
-          onMouseLeave={() => setHovered(0)}
-          className="text-3xl transition-colors duration-100 border-0 shadow-none
-                     p-0 w-auto mt-0 font-normal leading-none
-                     focus:outline-none"
-          style={{ color: i <= active ? '#facc15' : '#404040' }}
-          aria-label={`${i} star${i !== 1 ? 's' : ''}`}
-        >
-          ★
-        </button>
-      ))}
-      {value > 0 && (
-        <span className="text-sm text-neutral-500 self-center ml-1">
-          {value}/5
-        </span>
-      )}
-    </div>
-  );
-}
-
-export default function AdminReviewsPage() {
+export default function AdminStoriesPage() {
   const { user } = UserAuth() || {};
 
-  const [businessName, setBusinessName] = useState('');
-  const [comment, setComment] = useState('');
-  const [rating, setRating] = useState(0);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const [date, setDate] = useState(today());
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -64,9 +32,10 @@ export default function AdminReviewsPage() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!businessName.trim()) { setError('Business name is required.'); return; }
-    if (!comment.trim())      { setError('Comment is required.'); return; }
-    if (rating === 0)         { setError('Please select a rating.'); return; }
+    if (!title.trim() || !content.trim()) {
+      setError('Title and content are required.');
+      return;
+    }
 
     setError('');
     setSuccess(false);
@@ -74,16 +43,14 @@ export default function AdminReviewsPage() {
 
     try {
       const ts = Timestamp.fromDate(new Date(date + 'T12:00:00'));
-      await addDoc(collection(db, 'reviews'), {
-        businessName: businessName.trim(),
-        comment: comment.trim(),
-        rating,
-        date: ts,
+      await addDoc(collection(db, 'stories'), {
+        title: title.trim(),
+        content: content.trim(),
+        createdAt: ts,
       });
 
-      setBusinessName('');
-      setComment('');
-      setRating(0);
+      setTitle('');
+      setContent('');
       setDate(today());
       setSuccess(true);
     } catch {
@@ -105,49 +72,41 @@ export default function AdminReviewsPage() {
       <p className="text-xs uppercase tracking-[0.2em] text-highlights font-semibold mb-3">
         Admin
       </p>
-      <h1 className="font-bold text-white tracking-tight text-4xl mb-8">Add Review</h1>
+      <h1 className="font-bold text-white tracking-tight text-4xl mb-8">Add Story</h1>
 
       <form onSubmit={submit} className="flex flex-col gap-6">
 
-        {/* Business Name */}
+        {/* Title */}
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
-            Business Name
+            Title
           </label>
           <input
             type="text"
-            value={businessName}
-            onChange={e => setBusinessName(e.target.value)}
-            placeholder="Santarpio's Pizza"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="The Night the Bridger Chairs Froze"
             className="bg-neutral-900/60 border-neutral-800 rounded-lg px-4 py-3
                        text-white placeholder:text-neutral-700 focus:outline-none
                        focus:border-highlights/50 transition-colors shadow-none my-0"
           />
         </div>
 
-        {/* Comment */}
+        {/* Content */}
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
-            Comment
+            Content
           </label>
           <textarea
-            value={comment}
-            onChange={e => setComment(e.target.value)}
-            placeholder="Write your review here…"
-            rows={10}
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            placeholder="Write your story here…"
+            rows={16}
             className="bg-neutral-900/60 border border-neutral-800 rounded-lg px-4 py-3
                        text-white placeholder:text-neutral-700 focus:outline-none
                        focus:border-highlights/50 transition-colors resize-y
                        text-[15px] leading-7 w-full"
           />
-        </div>
-
-        {/* Rating */}
-        <div className="flex flex-col gap-2">
-          <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
-            Rating
-          </label>
-          <StarPicker value={rating} onChange={setRating} />
         </div>
 
         {/* Date */}
@@ -169,7 +128,7 @@ export default function AdminReviewsPage() {
         {error && <p className="text-red-400 text-sm">{error}</p>}
         {success && (
           <p className="text-green-400 text-sm">
-            Review published! <Link href="/reviews" className="underline">View reviews →</Link>
+            Story published! <Link href="/stories" className="underline">View stories →</Link>
           </p>
         )}
 
@@ -182,7 +141,7 @@ export default function AdminReviewsPage() {
                      disabled:opacity-50 disabled:cursor-not-allowed
                      border-0 shadow-none w-full sm:w-auto"
         >
-          {loading ? 'Publishing…' : 'Publish Review'}
+          {loading ? 'Publishing…' : 'Publish Story'}
         </button>
 
       </form>

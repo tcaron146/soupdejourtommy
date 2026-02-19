@@ -2,10 +2,30 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Public blog - all content is readable without auth
+
+    // Public reads on everything
     match /{document=**} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // Admin-only writes for content collections
+    match /stories/{storyId} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == "0pAMwWMZhIZ21qGsQLqNYFrveLd2";
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == "0pAMwWMZhIZ21qGsQLqNYFrveLd2";
+    }
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == "0pAMwWMZhIZ21qGsQLqNYFrveLd2";
     }
   }
 }
