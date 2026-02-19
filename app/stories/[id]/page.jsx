@@ -14,6 +14,75 @@ import { db } from "@/app/firebase";
 import Link from "next/link";
 import StoryNav from "@/app/components/StoryNav";
 
+const TEXT_CLASS = "text-neutral-300 text-[17px] leading-8 whitespace-pre-line tracking-[0.01em]";
+
+// Split text into N roughly equal chunks, snapping cuts to word boundaries
+function splitIntoChunks(text, n) {
+  if (n <= 1) return [text];
+  const chunkSize = Math.ceil(text.length / n);
+  const chunks = [];
+  let pos = 0;
+
+  for (let i = 0; i < n; i++) {
+    if (pos >= text.length) { chunks.push(''); continue; }
+    if (i === n - 1) { chunks.push(text.slice(pos).trim()); break; }
+    let end = Math.min(pos + chunkSize, text.length);
+    while (end < text.length && text[end] !== ' ' && text[end] !== '\n') end++;
+    chunks.push(text.slice(pos, end).trim());
+    pos = end + 1;
+  }
+
+  return chunks;
+}
+
+function StoryMedia({ item }) {
+  if (item.type === "video") {
+    return (
+      <figure className="my-12 w-full overflow-hidden rounded-2xl">
+        <video
+          src={item.url}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full block"
+        />
+      </figure>
+    );
+  }
+  return (
+    <figure className="my-12 w-full overflow-hidden rounded-2xl">
+      <img
+        src={item.url}
+        alt=""
+        className="w-full block object-cover max-h-[70vh]"
+      />
+    </figure>
+  );
+}
+
+function StoryContent({ content, media = [] }) {
+  if (!media.length) {
+    return <div className={TEXT_CLASS}>{content}</div>;
+  }
+
+  // N media items → N+1 text chunks
+  // Structure: text → media → text → media → ... → text
+  const chunks = splitIntoChunks(content, media.length + 1);
+
+  return (
+    <div>
+      {media.map((item, i) => (
+        <div key={i}>
+          {chunks[i] && <div className={`${TEXT_CLASS} mb-2`}>{chunks[i]}</div>}
+          <StoryMedia item={item} />
+        </div>
+      ))}
+      {chunks[media.length] && <div className={TEXT_CLASS}>{chunks[media.length]}</div>}
+    </div>
+  );
+}
+
 export default function StoryPage() {
   const { id } = useParams();
 
@@ -88,6 +157,12 @@ export default function StoryPage() {
     );
   }
 
+  const dateTs = story.createdAt || story.date;
+  const formattedDate = dateTs
+    ? (dateTs.toDate ? dateTs.toDate() : new Date(dateTs))
+        .toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    : null;
+
   return (
     <article className="pt-28 max-w-2xl mx-auto px-6 pb-20">
 
@@ -109,20 +184,13 @@ export default function StoryPage() {
                         text-4xl sm:text-5xl">
           {story.title}
         </h1>
-        {story.date && (
-          <p className="text-sm text-neutral-600 mt-4">
-            {story.date.toDate
-              ? story.date.toDate().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
-              : story.date}
-          </p>
+        {formattedDate && (
+          <p className="text-sm text-neutral-600 mt-4">{formattedDate}</p>
         )}
       </header>
 
-      {/* Content */}
-      <div className="text-neutral-300 text-[17px] leading-8 whitespace-pre-line
-                      [&>p]:mb-6 tracking-[0.01em]">
-        {story.content}
-      </div>
+      {/* Content + Media */}
+      <StoryContent content={story.content} media={story.media} />
 
       <StoryNav prev={prevStory} next={nextStory} />
     </article>

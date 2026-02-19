@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { db } from '@/app/firebase';
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
+import { useState, useEffect, useRef } from 'react';
+import { db, storage } from '@/app/firebase';
+import { doc, setDoc, collection, Timestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { UserAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 
@@ -12,12 +13,50 @@ function today() {
   return new Date().toISOString().split('T')[0];
 }
 
+function MediaPreview({ file, onRemove }) {
+  const [url, setUrl] = useState('');
+  const isVideo = file.type.startsWith('video/');
+
+  useEffect(() => {
+    const obj = URL.createObjectURL(file);
+    setUrl(obj);
+    return () => URL.revokeObjectURL(obj);
+  }, [file]);
+
+  return (
+    <div className="relative rounded-xl overflow-hidden bg-neutral-900 aspect-video">
+      {isVideo
+        ? <video src={url} className="w-full h-full object-cover" muted />
+        : <img src={url} alt="" className="w-full h-full object-cover" />
+      }
+      <span className="absolute top-1.5 left-1.5 text-[9px] uppercase tracking-wider
+                       bg-black/60 text-white px-1.5 py-0.5 rounded font-semibold">
+        {isVideo ? 'Video' : 'Photo'}
+      </span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60
+                   text-white text-xs hover:bg-red-500/80 transition-colors
+                   border-0 shadow-none p-0 w-auto mt-0 font-normal
+                   flex items-center justify-center"
+        style={{ width: '24px', height: '24px' }}
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 export default function AdminStoriesPage() {
   const { user } = UserAuth() || {};
+  const fileInputRef = useRef(null);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [date, setDate] = useState(today());
+  const [mediaFiles, setMediaFiles] = useState([]);
+  const [uploadStatus, setUploadStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -28,6 +67,16 @@ export default function AdminStoriesPage() {
         <p className="text-neutral-500">Unauthorized.</p>
       </main>
     );
+  }
+
+  function addFiles(e) {
+    const picked = Array.from(e.target.files || []);
+    setMediaFiles(prev => [...prev, ...picked]);
+    e.target.value = '';
+  }
+
+  function removeFile(index) {
+    setMediaFiles(prev => prev.filter((_, i) => i !== index));
   }
 
   async function submit(e) {
@@ -42,21 +91,38 @@ export default function AdminStoriesPage() {
     setLoading(true);
 
     try {
-      const ts = Timestamp.fromDate(new Date(date + 'T12:00:00'));
-      await addDoc(collection(db, 'stories'), {
+      // Generate story ID upfront so we can use it as the storage path
+      const storyRef = doc(collection(db, 'stories'));
+
+      // Upload media
+      const media = [];
+      for (let i = 0; i < mediaFiles.length; i++) {
+        const file = mediaFiles[i];
+        setUploadStatus(`Uploading ${i + 1} of ${mediaFiles.length}…`);
+        const storageRef = ref(storage, `stories/${storyRef.id}/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        media.push({ type: file.type.startsWith('video/') ? 'video' : 'image', url });
+      }
+
+      setUploadStatus('Publishing…');
+      await setDoc(storyRef, {
         title: title.trim(),
         content: content.trim(),
-        createdAt: ts,
+        createdAt: Timestamp.fromDate(new Date(date + 'T12:00:00')),
+        media,
       });
 
       setTitle('');
       setContent('');
       setDate(today());
+      setMediaFiles([]);
       setSuccess(true);
     } catch {
       setError('Failed to publish. Check your connection and try again.');
     } finally {
       setLoading(false);
+      setUploadStatus('');
     }
   }
 
@@ -109,6 +175,51 @@ export default function AdminStoriesPage() {
           />
         </div>
 
+        {/* Media */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
+              Photos & Videos
+            </label>
+            <span className="text-xs text-neutral-700">
+              {mediaFiles.length > 0 ? `${mediaFiles.length} selected` : 'optional'}
+            </span>
+          </div>
+
+          {mediaFiles.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {mediaFiles.map((file, i) => (
+                <MediaPreview key={i} file={file} onRemove={() => removeFile(i)} />
+              ))}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={addFiles}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="px-4 py-2.5 rounded-lg border border-neutral-800 border-dashed
+                       text-sm text-neutral-500 hover:text-white hover:border-neutral-600
+                       transition-colors border-0 shadow-none w-full mt-0 font-normal
+                       bg-transparent"
+            style={{ border: '1px dashed rgb(38,38,38)' }}
+          >
+            + Add photos or videos
+          </button>
+          {mediaFiles.length > 0 && (
+            <p className="text-xs text-neutral-700">
+              Media will be placed automatically throughout the story, alternating left and right.
+            </p>
+          )}
+        </div>
+
         {/* Date */}
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
@@ -124,15 +235,14 @@ export default function AdminStoriesPage() {
           />
         </div>
 
-        {/* Feedback */}
         {error && <p className="text-red-400 text-sm">{error}</p>}
+        {uploadStatus && <p className="text-neutral-400 text-sm">{uploadStatus}</p>}
         {success && (
           <p className="text-green-400 text-sm">
             Story published! <Link href="/stories" className="underline">View stories →</Link>
           </p>
         )}
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
@@ -141,7 +251,7 @@ export default function AdminStoriesPage() {
                      disabled:opacity-50 disabled:cursor-not-allowed
                      border-0 shadow-none w-full sm:w-auto"
         >
-          {loading ? 'Publishing…' : 'Publish Story'}
+          {loading ? uploadStatus || 'Publishing…' : 'Publish Story'}
         </button>
 
       </form>
