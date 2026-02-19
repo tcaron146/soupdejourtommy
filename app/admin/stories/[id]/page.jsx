@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { db } from '@/app/firebase';
+import { db, storage } from '@/app/firebase';
 import { doc, getDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { UserAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 
@@ -15,14 +16,81 @@ function tsToDateInput(ts) {
   return d.toISOString().split('T')[0];
 }
 
+// Thumbnail for an already-uploaded media item (has a URL)
+function ExistingThumb({ item, onRemove }) {
+  return (
+    <div className="relative rounded-xl overflow-hidden bg-neutral-900 aspect-video">
+      {item.type === 'video'
+        ? <video src={item.url} className="w-full h-full object-cover" muted />
+        : <img src={item.url} alt="" className="w-full h-full object-cover" />
+      }
+      <span className="absolute top-1.5 left-1.5 text-[9px] uppercase tracking-wider
+                       bg-black/60 text-white px-1.5 py-0.5 rounded font-semibold">
+        {item.type === 'video' ? 'Video' : 'Photo'}
+      </span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60
+                   text-white text-xs hover:bg-red-500/80 transition-colors
+                   border-0 shadow-none p-0 w-auto mt-0 font-normal
+                   flex items-center justify-center"
+        style={{ width: '24px', height: '24px' }}
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
+// Thumbnail for a newly picked File (not yet uploaded)
+function NewFileThumb({ file, onRemove }) {
+  const [url, setUrl] = useState('');
+  const isVideo = file.type.startsWith('video/');
+
+  useEffect(() => {
+    const obj = URL.createObjectURL(file);
+    setUrl(obj);
+    return () => URL.revokeObjectURL(obj);
+  }, [file]);
+
+  return (
+    <div className="relative rounded-xl overflow-hidden bg-neutral-900 aspect-video">
+      {isVideo
+        ? <video src={url} className="w-full h-full object-cover" muted />
+        : <img src={url} alt="" className="w-full h-full object-cover" />
+      }
+      <span className="absolute top-1.5 left-1.5 text-[9px] uppercase tracking-wider
+                       bg-black/60 text-white px-1.5 py-0.5 rounded font-semibold">
+        {isVideo ? 'Video' : 'Photo'} · new
+      </span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60
+                   text-white text-xs hover:bg-red-500/80 transition-colors
+                   border-0 shadow-none p-0 w-auto mt-0 font-normal
+                   flex items-center justify-center"
+        style={{ width: '24px', height: '24px' }}
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 export default function EditStoryPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, authLoading } = UserAuth() || {};
+  const fileInputRef = useRef(null);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [date, setDate] = useState('');
+  const [existingMedia, setExistingMedia] = useState([]); // { type, url } from Firestore
+  const [newFiles, setNewFiles] = useState([]);            // File objects pending upload
+  const [uploadStatus, setUploadStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -40,6 +108,7 @@ export default function EditStoryPage() {
         setTitle(data.title || '');
         setContent(data.content || '');
         setDate(tsToDateInput(data.createdAt));
+        setExistingMedia(data.media || []);
       } catch {
         setError('Failed to load story.');
       } finally {
@@ -74,21 +143,45 @@ export default function EditStoryPage() {
     );
   }
 
+  function addFiles(e) {
+    const picked = Array.from(e.target.files || []);
+    setNewFiles(prev => [...prev, ...picked]);
+    e.target.value = '';
+  }
+
   async function handleSave(e) {
     e.preventDefault();
     if (!title.trim() || !content.trim()) { setError('Title and content are required.'); return; }
     setError(''); setSuccess(false); setSaving(true);
+
     try {
+      // Upload any newly added files
+      const uploaded = [];
+      for (let i = 0; i < newFiles.length; i++) {
+        const file = newFiles[i];
+        setUploadStatus(`Uploading ${i + 1} of ${newFiles.length}…`);
+        const storageRef = ref(storage, `stories/${id}/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        uploaded.push({ type: file.type.startsWith('video/') ? 'video' : 'image', url });
+      }
+
+      setUploadStatus('Saving…');
       await updateDoc(doc(db, 'stories', id), {
         title: title.trim(),
         content: content.trim(),
         createdAt: Timestamp.fromDate(new Date(date + 'T12:00:00')),
+        media: [...existingMedia, ...uploaded],
       });
+
+      setNewFiles([]);
+      setExistingMedia(prev => [...prev, ...uploaded]);
       setSuccess(true);
     } catch {
       setError('Failed to save. Try again.');
     } finally {
       setSaving(false);
+      setUploadStatus('');
     }
   }
 
@@ -102,6 +195,8 @@ export default function EditStoryPage() {
       setDeleting(false);
     }
   }
+
+  const totalMedia = existingMedia.length + newFiles.length;
 
   return (
     <main className="pt-28 max-w-2xl mx-auto px-6 pb-20">
@@ -143,6 +238,56 @@ export default function EditStoryPage() {
           />
         </div>
 
+        {/* Media */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
+              Photos & Videos
+            </label>
+            <span className="text-xs text-neutral-700">
+              {totalMedia > 0 ? `${totalMedia} total` : 'none'}
+            </span>
+          </div>
+
+          {totalMedia > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {existingMedia.map((item, i) => (
+                <ExistingThumb
+                  key={`existing-${i}`}
+                  item={item}
+                  onRemove={() => setExistingMedia(prev => prev.filter((_, idx) => idx !== i))}
+                />
+              ))}
+              {newFiles.map((file, i) => (
+                <NewFileThumb
+                  key={`new-${i}`}
+                  file={file}
+                  onRemove={() => setNewFiles(prev => prev.filter((_, idx) => idx !== i))}
+                />
+              ))}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={addFiles}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="px-4 py-2.5 rounded-lg text-sm text-neutral-500 hover:text-white
+                       hover:border-neutral-600 transition-colors border-0 shadow-none
+                       w-full mt-0 font-normal bg-transparent"
+            style={{ border: '1px dashed rgb(38,38,38)' }}
+          >
+            + Add photos or videos
+          </button>
+        </div>
+
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">Date</label>
           <input
@@ -156,6 +301,7 @@ export default function EditStoryPage() {
         </div>
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
+        {uploadStatus && <p className="text-neutral-400 text-sm">{uploadStatus}</p>}
         {success && <p className="text-green-400 text-sm">Saved! <Link href={`/stories/${id}`} className="underline">View story →</Link></p>}
 
         <div className="flex items-center justify-between gap-4 flex-wrap mt-2">
@@ -166,10 +312,9 @@ export default function EditStoryPage() {
                        text-white font-semibold text-sm transition-colors duration-200
                        disabled:opacity-50 border-0 shadow-none w-full sm:w-auto"
           >
-            {saving ? 'Saving…' : 'Save Changes'}
+            {saving ? uploadStatus || 'Saving…' : 'Save Changes'}
           </button>
 
-          {/* Delete */}
           {!confirmDelete ? (
             <button
               type="button"
