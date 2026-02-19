@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { db } from '@/app/firebase';
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
+import { useState, useRef } from 'react';
+import { db, storage } from '@/app/firebase';
+import { doc, setDoc, collection, Timestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { UserAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 
@@ -26,8 +27,7 @@ function StarPicker({ value, onChange }) {
           onMouseEnter={() => setHovered(i)}
           onMouseLeave={() => setHovered(0)}
           className="text-3xl transition-colors duration-100 border-0 shadow-none
-                     p-0 w-auto mt-0 font-normal leading-none
-                     focus:outline-none"
+                     p-0 w-auto mt-0 font-normal leading-none focus:outline-none"
           style={{ color: i <= active ? '#facc15' : '#404040' }}
           aria-label={`${i} star${i !== 1 ? 's' : ''}`}
         >
@@ -35,21 +35,56 @@ function StarPicker({ value, onChange }) {
         </button>
       ))}
       {value > 0 && (
-        <span className="text-sm text-neutral-500 self-center ml-1">
-          {value}/5
-        </span>
+        <span className="text-sm text-neutral-500 self-center ml-1">{value}/5</span>
       )}
+    </div>
+  );
+}
+
+function MediaPreview({ file, onRemove }) {
+  const [url, setUrl] = useState('');
+  const isVideo = file.type.startsWith('video/');
+
+  useState(() => {
+    const obj = URL.createObjectURL(file);
+    setUrl(obj);
+    return () => URL.revokeObjectURL(obj);
+  });
+
+  return (
+    <div className="relative rounded-xl overflow-hidden bg-neutral-900 aspect-video">
+      {isVideo
+        ? <video src={url} className="w-full h-full object-cover" muted />
+        : <img src={url} alt="" className="w-full h-full object-cover" />
+      }
+      <span className="absolute top-1.5 left-1.5 text-[9px] uppercase tracking-wider
+                       bg-black/60 text-white px-1.5 py-0.5 rounded font-semibold">
+        {isVideo ? 'Video' : 'Photo'}
+      </span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1.5 right-1.5 rounded-full bg-black/60 text-white
+                   text-xs hover:bg-red-500/80 transition-colors border-0 shadow-none
+                   p-0 w-auto mt-0 font-normal flex items-center justify-center"
+        style={{ width: '24px', height: '24px' }}
+      >
+        ✕
+      </button>
     </div>
   );
 }
 
 export default function AdminReviewsPage() {
   const { user } = UserAuth() || {};
+  const fileInputRef = useRef(null);
 
   const [businessName, setBusinessName] = useState('');
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
   const [date, setDate] = useState(today());
+  const [mediaFiles, setMediaFiles] = useState([]);
+  const [uploadStatus, setUploadStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -60,6 +95,16 @@ export default function AdminReviewsPage() {
         <p className="text-neutral-500">Unauthorized.</p>
       </main>
     );
+  }
+
+  function addFiles(e) {
+    const picked = Array.from(e.target.files || []);
+    setMediaFiles(prev => [...prev, ...picked]);
+    e.target.value = '';
+  }
+
+  function removeFile(index) {
+    setMediaFiles(prev => prev.filter((_, i) => i !== index));
   }
 
   async function submit(e) {
@@ -73,23 +118,38 @@ export default function AdminReviewsPage() {
     setLoading(true);
 
     try {
-      const ts = Timestamp.fromDate(new Date(date + 'T12:00:00'));
-      await addDoc(collection(db, 'reviews'), {
+      const reviewRef = doc(collection(db, 'reviews'));
+
+      const media = [];
+      for (let i = 0; i < mediaFiles.length; i++) {
+        const file = mediaFiles[i];
+        setUploadStatus(`Uploading ${i + 1} of ${mediaFiles.length}…`);
+        const storageRef = ref(storage, `reviews/${reviewRef.id}/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        media.push({ type: file.type.startsWith('video/') ? 'video' : 'image', url });
+      }
+
+      setUploadStatus('Publishing…');
+      await setDoc(reviewRef, {
         businessName: businessName.trim(),
         comment: comment.trim(),
         rating,
-        date: ts,
+        date: Timestamp.fromDate(new Date(date + 'T12:00:00')),
+        media,
       });
 
       setBusinessName('');
       setComment('');
       setRating(0);
       setDate(today());
+      setMediaFiles([]);
       setSuccess(true);
     } catch {
       setError('Failed to publish. Check your connection and try again.');
     } finally {
       setLoading(false);
+      setUploadStatus('');
     }
   }
 
@@ -109,7 +169,6 @@ export default function AdminReviewsPage() {
 
       <form onSubmit={submit} className="flex flex-col gap-6">
 
-        {/* Business Name */}
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
             Business Name
@@ -125,7 +184,6 @@ export default function AdminReviewsPage() {
           />
         </div>
 
-        {/* Comment */}
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
             Comment
@@ -142,7 +200,6 @@ export default function AdminReviewsPage() {
           />
         </div>
 
-        {/* Rating */}
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
             Rating
@@ -150,7 +207,45 @@ export default function AdminReviewsPage() {
           <StarPicker value={rating} onChange={setRating} />
         </div>
 
-        {/* Date */}
+        {/* Media */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
+              Photos & Videos
+            </label>
+            <span className="text-xs text-neutral-700">
+              {mediaFiles.length > 0 ? `${mediaFiles.length} selected` : 'optional'}
+            </span>
+          </div>
+
+          {mediaFiles.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {mediaFiles.map((file, i) => (
+                <MediaPreview key={i} file={file} onRemove={() => removeFile(i)} />
+              ))}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={addFiles}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="px-4 py-2.5 rounded-lg text-sm text-neutral-500 hover:text-white
+                       hover:border-neutral-600 transition-colors border-0 shadow-none
+                       w-full mt-0 font-normal bg-transparent"
+            style={{ border: '1px dashed rgb(38,38,38)' }}
+          >
+            + Add photos or videos
+          </button>
+        </div>
+
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
             Date
@@ -165,15 +260,14 @@ export default function AdminReviewsPage() {
           />
         </div>
 
-        {/* Feedback */}
         {error && <p className="text-red-400 text-sm">{error}</p>}
+        {uploadStatus && <p className="text-neutral-400 text-sm">{uploadStatus}</p>}
         {success && (
           <p className="text-green-400 text-sm">
             Review published! <Link href="/reviews" className="underline">View reviews →</Link>
           </p>
         )}
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
@@ -182,7 +276,7 @@ export default function AdminReviewsPage() {
                      disabled:opacity-50 disabled:cursor-not-allowed
                      border-0 shadow-none w-full sm:w-auto"
         >
-          {loading ? 'Publishing…' : 'Publish Review'}
+          {loading ? uploadStatus || 'Publishing…' : 'Publish Review'}
         </button>
 
       </form>
