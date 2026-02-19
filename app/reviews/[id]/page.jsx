@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   doc,
   getDoc,
@@ -26,69 +26,175 @@ function Stars({ rating }) {
   );
 }
 
-function ReviewMedia({ item }) {
-  if (item.type === 'video') {
-    return (
-      <figure className="my-12 w-full overflow-hidden rounded-2xl">
-        <video
-          src={item.url}
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="w-full block"
-        />
-      </figure>
-    );
-  }
+function Lightbox({ media, index, setIndex, onClose }) {
+  const item = media[index];
+  const hasPrev = index > 0;
+  const hasNext = index < media.length - 1;
+
+  const prev = useCallback(() => setIndex(i => i - 1), [setIndex]);
+  const next = useCallback(() => setIndex(i => i + 1), [setIndex]);
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'ArrowLeft' && hasPrev) prev();
+      if (e.key === 'ArrowRight' && hasNext) next();
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [hasPrev, hasNext, prev, next, onClose]);
+
+  // Prevent body scroll while open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
   return (
-    <figure className="my-12 w-full overflow-hidden rounded-2xl">
-      <img
-        src={item.url}
-        alt=""
-        className="w-full block object-cover max-h-[70vh]"
-      />
-    </figure>
+    <div
+      className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center"
+      onClick={onClose}
+    >
+      {/* Top bar */}
+      <div
+        className="w-full max-w-4xl flex items-center justify-between px-4 pb-3"
+        onClick={e => e.stopPropagation()}
+      >
+        <span className="text-sm text-neutral-500">{index + 1} / {media.length}</span>
+        <button
+          onClick={onClose}
+          className="text-neutral-400 hover:text-white transition-colors border-0 shadow-none
+                     p-0 w-auto mt-0 font-normal text-xl leading-none"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Media + arrows */}
+      <div
+        className="relative w-full max-w-4xl px-4 flex items-center"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Prev */}
+        <button
+          onClick={prev}
+          disabled={!hasPrev}
+          className="absolute left-0 z-10 w-10 h-10 flex items-center justify-center
+                     text-white text-2xl disabled:opacity-0 border-0 shadow-none
+                     p-0 w-auto mt-0 font-normal bg-black/40 rounded-full mx-2
+                     hover:bg-black/70 transition-colors"
+          style={{ width: '40px', height: '40px' }}
+        >
+          ‹
+        </button>
+
+        {item.type === 'video' ? (
+          <video
+            key={item.url}
+            src={item.url}
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+            className="w-full rounded-xl max-h-[80vh] object-contain"
+          />
+        ) : (
+          <img
+            key={item.url}
+            src={item.url}
+            alt=""
+            className="w-full rounded-xl max-h-[80vh] object-contain"
+          />
+        )}
+
+        {/* Next */}
+        <button
+          onClick={next}
+          disabled={!hasNext}
+          className="absolute right-0 z-10 w-10 h-10 flex items-center justify-center
+                     text-white text-2xl disabled:opacity-0 border-0 shadow-none
+                     p-0 w-auto mt-0 font-normal bg-black/40 rounded-full mx-2
+                     hover:bg-black/70 transition-colors"
+          style={{ width: '40px', height: '40px' }}
+        >
+          ›
+        </button>
+      </div>
+
+      {/* Dot indicators */}
+      {media.length > 1 && (
+        <div
+          className="flex gap-1.5 mt-4"
+          onClick={e => e.stopPropagation()}
+        >
+          {media.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              className="w-1.5 h-1.5 rounded-full border-0 shadow-none p-0 w-auto mt-0 font-normal transition-colors"
+              style={{
+                width: '6px',
+                height: '6px',
+                backgroundColor: i === index ? 'white' : 'rgb(64,64,64)',
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
-function splitIntoChunks(text, n) {
-  if (n <= 1) return [text];
-  const chunkSize = Math.ceil(text.length / n);
-  const chunks = [];
-  let pos = 0;
+function MediaGallery({ media }) {
+  const [lightboxIndex, setLightboxIndex] = useState(null);
 
-  for (let i = 0; i < n; i++) {
-    if (pos >= text.length) { chunks.push(''); continue; }
-    if (i === n - 1) { chunks.push(text.slice(pos).trim()); break; }
-    let end = Math.min(pos + chunkSize, text.length);
-    while (end < text.length && text[end] !== ' ' && text[end] !== '\n') end++;
-    chunks.push(text.slice(pos, end).trim());
-    pos = end + 1;
-  }
-
-  return chunks;
-}
-
-const TEXT_CLASS = 'text-neutral-300 text-[17px] leading-8 whitespace-pre-line tracking-[0.01em]';
-
-function ReviewContent({ comment, media = [] }) {
-  if (!media.length) {
-    return <div className={TEXT_CLASS}>{comment}</div>;
-  }
-
-  const chunks = splitIntoChunks(comment, media.length + 1);
+  if (!media?.length) return null;
 
   return (
-    <div>
-      {media.map((item, i) => (
-        <div key={i}>
-          {chunks[i] && <div className={`${TEXT_CLASS} mb-2`}>{chunks[i]}</div>}
-          <ReviewMedia item={item} />
-        </div>
-      ))}
-      {chunks[media.length] && <div className={TEXT_CLASS}>{chunks[media.length]}</div>}
-    </div>
+    <>
+      <div className="mt-10 grid grid-cols-3 gap-2">
+        {media.map((item, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setLightboxIndex(i)}
+            className="relative aspect-square overflow-hidden rounded-xl bg-neutral-900
+                       border-0 shadow-none p-0 w-auto mt-0 font-normal
+                       group cursor-zoom-in"
+          >
+            {item.type === 'video' ? (
+              <>
+                <video
+                  src={item.url}
+                  muted
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 flex items-center justify-center
+                                bg-black/30 group-hover:bg-black/20 transition-colors">
+                  <span className="text-white text-2xl">▶</span>
+                </div>
+              </>
+            ) : (
+              <img
+                src={item.url}
+                alt=""
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          media={media}
+          index={lightboxIndex}
+          setIndex={setLightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
+    </>
   );
 }
 
@@ -181,7 +287,6 @@ export default function ReviewDetailPage() {
   return (
     <main className="pt-28 max-w-2xl mx-auto px-6 pb-20">
 
-      {/* Breadcrumb */}
       <Link
         href="/reviews"
         className="inline-flex items-center gap-1.5 text-xs text-neutral-600
@@ -190,7 +295,6 @@ export default function ReviewDetailPage() {
         ← Reviews
       </Link>
 
-      {/* Header */}
       <header className="mb-10 pb-8 border-b border-neutral-800/60">
         <p className="text-xs uppercase tracking-[0.2em] text-highlights font-semibold mb-4">
           Food Review
@@ -213,8 +317,11 @@ export default function ReviewDetailPage() {
         </div>
       </header>
 
-      {/* Content + Media */}
-      <ReviewContent comment={review.comment} media={review.media} />
+      <div className="text-neutral-300 text-[17px] leading-8 whitespace-pre-line tracking-[0.01em]">
+        {review.comment}
+      </div>
+
+      <MediaGallery media={review.media} />
 
       <StoryNav prev={prevReview} next={nextReview} basePath="/reviews" />
     </main>
