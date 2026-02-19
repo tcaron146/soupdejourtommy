@@ -27,7 +27,6 @@ export default function ReviewDetailPage() {
 
         setReview({ id: snap.id, ...snap.data() });
       } catch (err) {
-        console.error(err);
         setError('Failed to load review');
       } finally {
         setLoading(false);

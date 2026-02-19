@@ -48,7 +48,7 @@ export default function ReviewsPage() {
         setLastDoc(snap.docs[snap.docs.length - 1]);
       }
     } catch (err) {
-      console.error('Error loading reviews:', err);
+      // silently fail — reviews list stays empty on error
     } finally {
       setLoading(false);
     }

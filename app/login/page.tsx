@@ -1,43 +1,51 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { UserAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
 
 export default function LoginPage() {
   const { googleSignIn, emailSignIn } = UserAuth() || {};
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleEmailLogin = async () => {
-  setLoading(true);
-  try {
-    await emailSignIn(email, password);
-    window.location.href = "/";
-  } catch (err: any) {
-    alert(err.message);
-  }
-  setLoading(false);
-};
+    setError("");
+    setLoading(true);
+    try {
+      await emailSignIn(email, password);
+      router.push("/");
+    } catch (err: any) {
+      setError(err.message);
+    }
+    setLoading(false);
+  };
 
-const handleGoogleLogin = async () => {
-  setLoading(true);
-  try {
-    await googleSignIn();
-    window.location.href = "/";
-  } catch (err: any) {
-    alert(err.message);
-  }
-  setLoading(false);
-};
-
+  const handleGoogleLogin = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      await googleSignIn();
+      router.push("/");
+    } catch (err: any) {
+      setError(err.message);
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6">
       <div className="bg-neutral-900 p-8 rounded-lg w-full max-w-md shadow-lg">
 
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+
+        {error && (
+          <p className="text-red-400 text-sm mb-4 text-center">{error}</p>
+        )}
 
         {/* Email */}
         <input
@@ -76,7 +84,7 @@ const handleGoogleLogin = async () => {
         </button>
 
         <p className="text-center mt-4 text-neutral-400">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <Link href="/signup" className="text-primary underline">
             Sign Up
           </Link>

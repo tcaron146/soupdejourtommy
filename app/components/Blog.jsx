@@ -16,7 +16,7 @@ export default function Blog() {
         const data = await response.json();
         setPosts(data);
       } catch (error) {
-        console.error('Failed to fetch posts:', error);
+        // fetch failed silently — /api/posts not yet implemented
       } finally {
         setLoading(false);
       }
@@ -40,7 +40,7 @@ export default function Blog() {
       setNewPostTitle(''); // Clear form
       setNewPostContent('');
     } catch (error) {
-      console.error('Failed to add post:', error);
+      // post failed silently — /api/posts not yet implemented
     }
   };
 

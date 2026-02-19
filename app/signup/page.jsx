@@ -1,31 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { UserAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
 
 export default function SignupPage() {
   const { emailSignUp } = UserAuth() || {};
+  const router = useRouter();
 
   const [name, setName] = useState("");
   const [birthday, setBirthday] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSignup = async () => {
     if (!name || !email || !password || !birthday) {
-      alert("Please fill out all fields.");
+      setError("Please fill out all fields.");
       return;
     }
 
+    setError("");
     setLoading(true);
 
     try {
       const user = await emailSignUp(email, password, name, birthday);
-      window.location.href = `/profile/${user.uid}`;
+      router.push(`/profile/${user.uid}`);
     } catch (err) {
-      alert(err.message);
+      setError(err.message);
     }
 
     setLoading(false);
@@ -36,6 +40,10 @@ export default function SignupPage() {
       <div className="bg-neutral-900 p-8 rounded-lg w-full max-w-md shadow-lg">
 
         <h2 className="text-2xl font-bold mb-6 text-center">Create Account</h2>
+
+        {error && (
+          <p className="text-red-400 text-sm mb-4 text-center">{error}</p>
+        )}
 
         {/* FULL NAME */}
         <input

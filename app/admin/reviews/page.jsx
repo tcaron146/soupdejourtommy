@@ -16,19 +16,14 @@ export default function ReviewPage() {
 
     async function load() {
       try {
-        console.log('Fetching review with ID:', id);
         const snap = await getDoc(doc(db, 'reviews', id));
-        console.log('Snapshot exists:', snap.exists());
-        
+
         if (snap.exists()) {
-          const data = snap.data();
-          console.log('Review data:', data);
-          setReview(data);
+          setReview(snap.data());
         } else {
           setError('Review not found');
         }
       } catch (err) {
-        console.error('Error loading review:', err);
         setError(err.message);
       } finally {
         setLoading(false);
