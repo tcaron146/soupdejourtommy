@@ -8,6 +8,8 @@ import {
   getDocs,
   orderBy,
   query,
+  where,
+  limit,
 } from 'firebase/firestore';
 import { db } from '@/app/firebase';
 import { useParams } from 'next/navigation';
@@ -206,6 +208,7 @@ export default function ReviewDetailPage() {
 
   const [prevReview, setPrevReview] = useState(null);
   const [nextReview, setNextReview] = useState(null);
+  const [related, setRelated] = useState([]);
 
   useEffect(() => {
     if (!id) return;
@@ -226,6 +229,21 @@ export default function ReviewDetailPage() {
       } finally {
         setLoading(false);
       }
+
+      try {
+        // Related reviews — same tag
+        const reviewData = (await getDoc(doc(db, 'reviews', id))).data();
+        const firstTag = reviewData?.tags?.[0];
+        if (firstTag) {
+          const relQ = query(
+            collection(db, 'reviews'),
+            where('tags', 'array-contains', firstTag),
+            limit(4)
+          );
+          const relSnap = await getDocs(relQ);
+          setRelated(relSnap.docs.filter(d => d.id !== id).slice(0, 3).map(d => ({ id: d.id, ...d.data() })));
+        }
+      } catch { /* silently fail */ }
 
       try {
         const q = query(
@@ -315,6 +333,20 @@ export default function ReviewDetailPage() {
             </span>
           )}
         </div>
+        {review.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {review.tags.map(tag => (
+              <Link
+                key={tag}
+                href={`/reviews?tag=${encodeURIComponent(tag)}`}
+                className="text-xs px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800
+                           text-neutral-500 hover:text-white hover:border-neutral-600 transition-colors"
+              >
+                {tag}
+              </Link>
+            ))}
+          </div>
+        )}
         {review.address && (
           <a
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(review.address)}`}
@@ -334,6 +366,39 @@ export default function ReviewDetailPage() {
       </div>
 
       <MediaGallery media={review.media} />
+
+      {related.length > 0 && (
+        <section className="mt-16 pt-10 border-t border-neutral-800/60">
+          <p className="text-xs uppercase tracking-[0.2em] text-neutral-600 font-semibold mb-6">
+            More like this
+          </p>
+          <div className="flex flex-col gap-3">
+            {related.map(r => (
+              <Link key={r.id} href={`/reviews/${r.id}`}
+                className="group flex items-center justify-between gap-4 py-3
+                           border-b border-neutral-800/40 hover:border-neutral-700 transition-colors">
+                <div>
+                  <p className="text-sm font-medium text-neutral-300 group-hover:text-white transition-colors">
+                    {r.businessName}
+                  </p>
+                  {r.tags?.length > 0 && (
+                    <p className="text-xs text-neutral-600 mt-0.5">{r.tags.slice(0, 2).join(', ')}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="flex gap-0.5">
+                    {[1,2,3,4,5].map(i => (
+                      <span key={i} className={i <= r.rating ? 'text-yellow-400' : 'text-neutral-800'} style={{fontSize:'12px'}}>★</span>
+                    ))}
+                  </span>
+                  <span className="text-neutral-700 group-hover:text-highlights group-hover:translate-x-1
+                                   transition-all duration-200 text-sm">→</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <StoryNav prev={prevReview} next={nextReview} basePath="/reviews" />
     </main>

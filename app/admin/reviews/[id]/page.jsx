@@ -10,6 +10,12 @@ import Link from 'next/link';
 
 const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
+const ALL_TAGS = [
+  'Pizza', 'Burgers', 'Sandwiches', 'Seafood', 'Sushi', 'Italian',
+  'Mexican', 'Brunch', 'Coffee', 'Cocktails', 'Dessert', 'Steakhouse',
+  'Thai', 'Tacos', 'Ramen', 'BBQ',
+];
+
 function tsToDateInput(ts) {
   if (!ts) return new Date().toISOString().split('T')[0];
   const d = ts.toDate ? ts.toDate() : new Date(ts);
@@ -110,6 +116,7 @@ export default function EditReviewPage() {
   const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
+  const [tags, setTags] = useState([]);
   const [date, setDate] = useState('');
   const [existingMedia, setExistingMedia] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
@@ -132,6 +139,7 @@ export default function EditReviewPage() {
         setAddress(data.address || '');
         setComment(data.comment || '');
         setRating(data.rating || 0);
+        setTags(data.tags || []);
         setDate(tsToDateInput(data.date));
         setExistingMedia(data.media || []);
       } catch {
@@ -198,6 +206,7 @@ export default function EditReviewPage() {
         address: address.trim(),
         comment: comment.trim(),
         rating,
+        tags,
         date: Timestamp.fromDate(new Date(date + 'T12:00:00')),
         media: [...existingMedia, ...uploaded],
       });
@@ -282,6 +291,34 @@ export default function EditReviewPage() {
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">Rating</label>
           <StarPicker value={rating} onChange={setRating} />
+        </div>
+
+        {/* Tags */}
+        <div className="flex flex-col gap-3">
+          <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
+            Tags <span className="normal-case tracking-normal font-normal text-neutral-700">— optional</span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {ALL_TAGS.map(tag => {
+              const active = tags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setTags(prev => active ? prev.filter(t => t !== tag) : [...prev, tag])}
+                  className="px-3 py-1 rounded-full text-xs font-medium transition-colors duration-150
+                             border-0 shadow-none w-auto mt-0"
+                  style={{
+                    backgroundColor: active ? 'rgb(var(--color-highlights) / 0.15)' : 'rgb(23,23,23)',
+                    color: active ? 'rgb(var(--color-highlights))' : 'rgb(115,115,115)',
+                    outline: active ? '1px solid rgb(var(--color-highlights) / 0.4)' : '1px solid rgb(38,38,38)',
+                  }}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Media */}

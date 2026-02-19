@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/app/firebase';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 function Stars({ rating }) {
   return (
@@ -18,9 +19,11 @@ function Stars({ rating }) {
 }
 
 export default function ReviewsPage() {
+  const searchParams = useSearchParams();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [activeTag, setActiveTag] = useState(searchParams.get('tag') || '');
   const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
@@ -41,11 +44,13 @@ export default function ReviewsPage() {
     load();
   }, []);
 
-  const filtered = search.trim()
-    ? reviews.filter(r =>
-        r.businessName?.toLowerCase().includes(search.toLowerCase())
-      )
-    : reviews;
+  const allTags = [...new Set(reviews.flatMap(r => r.tags || []))].sort();
+
+  const filtered = reviews.filter(r => {
+    const matchesSearch = !search.trim() || r.businessName?.toLowerCase().includes(search.toLowerCase());
+    const matchesTag = !activeTag || r.tags?.includes(activeTag);
+    return matchesSearch && matchesTag;
+  });
 
   return (
     <main className="pt-32 min-h-screen px-4">
@@ -88,6 +93,27 @@ export default function ReviewsPage() {
             </button>
           )}
         </div>
+
+        {/* Tag filters */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => setActiveTag(prev => prev === tag ? '' : tag)}
+                className="px-3 py-1 rounded-full text-xs font-medium transition-colors duration-150
+                           border-0 shadow-none w-auto mt-0"
+                style={{
+                  backgroundColor: activeTag === tag ? 'rgb(var(--color-highlights) / 0.15)' : 'rgb(23,23,23)',
+                  color: activeTag === tag ? 'rgb(var(--color-highlights))' : 'rgb(115,115,115)',
+                  outline: activeTag === tag ? '1px solid rgb(var(--color-highlights) / 0.4)' : '1px solid rgb(38,38,38)',
+                }}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Grid */}
         {loading ? (
@@ -159,11 +185,23 @@ export default function ReviewsPage() {
                             {r.comment}
                           </p>
                         )}
-                        {r.date && (
-                          <p className="text-[11px] text-neutral-700">
-                            {r.date.toDate().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                          </p>
-                        )}
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          {r.date && (
+                            <p className="text-[11px] text-neutral-700">
+                              {r.date.toDate().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                            </p>
+                          )}
+                          {r.tags?.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {r.tags.slice(0, 2).map(tag => (
+                                <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full
+                                                            bg-neutral-800 text-neutral-500">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Link>

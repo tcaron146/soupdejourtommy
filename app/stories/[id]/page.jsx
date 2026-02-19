@@ -163,6 +163,8 @@ export default function StoryPage() {
         .toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
     : null;
 
+  const readingMins = Math.max(1, Math.ceil(story.content.trim().split(/\s+/).length / 200));
+
   return (
     <article className="pt-28 max-w-2xl mx-auto px-6 pb-20">
 
@@ -184,9 +186,13 @@ export default function StoryPage() {
                         text-4xl sm:text-5xl">
           {story.title}
         </h1>
-        {formattedDate && (
-          <p className="text-sm text-neutral-600 mt-4">{formattedDate}</p>
-        )}
+        <div className="flex items-center gap-3 mt-4 flex-wrap">
+          {formattedDate && (
+            <span className="text-sm text-neutral-600">{formattedDate}</span>
+          )}
+          <span className="text-neutral-800 text-sm">·</span>
+          <span className="text-sm text-neutral-600">{readingMins} min read</span>
+        </div>
       </header>
 
       {/* Content + Media */}

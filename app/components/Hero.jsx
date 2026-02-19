@@ -4,9 +4,62 @@ import MailchimpSubscribe from "react-mailchimp-subscribe";
 import FeatureCard from "./FeatureCard";
 import fisherman from "../../public/fisherman.jpg";
 import stew from "../../public/pho.jpg";
+import { useEffect, useState } from "react";
+import { db } from "@/app/firebase";
+import { collection, getDocs, orderBy, query, limit } from "firebase/firestore";
+
+function FeaturedStory({ story }) {
+  const photo = story.media?.find(m => m.type === 'image');
+  if (!photo) return null;
+
+  const dateTs = story.createdAt || story.date;
+  const formattedDate = dateTs
+    ? (dateTs.toDate ? dateTs.toDate() : new Date(dateTs))
+        .toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    : null;
+
+  return (
+    <Link href={`/stories/${story.id}`} className="group block">
+      <div className="relative overflow-hidden rounded-2xl aspect-[16/9] sm:aspect-[21/9]">
+        <img
+          src={photo.url}
+          alt={story.title}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="absolute bottom-0 left-0 p-6 sm:p-8">
+          <p className="text-xs uppercase tracking-[0.15em] text-highlights font-semibold mb-2">
+            Latest Chronicle {formattedDate && `· ${formattedDate}`}
+          </p>
+          <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight tracking-tight max-w-lg">
+            {story.title}
+          </h2>
+          <span className="inline-flex items-center gap-1.5 mt-3 text-sm text-white/60
+                           group-hover:text-white transition-colors">
+            Read →
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 export default function Hero() {
   const url = process.env.NEXT_PUBLIC_MAILCHIMP_URL;
+  const [featuredStory, setFeaturedStory] = useState(null);
+
+  useEffect(() => {
+    async function loadFeatured() {
+      try {
+        const q = query(collection(db, 'stories'), orderBy('createdAt', 'desc'), limit(5));
+        const snap = await getDocs(q);
+        const withPhoto = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .find(s => s.media?.some(m => m.type === 'image'));
+        if (withPhoto) setFeaturedStory(withPhoto);
+      } catch { /* silently fail */ }
+    }
+    loadFeatured();
+  }, []);
 
   return (
     <main className="min-h-screen">
@@ -51,6 +104,13 @@ export default function Hero() {
           </Link>
         </div>
       </section>
+
+      {/* ── FEATURED STORY ────────────────────────────────── */}
+      {featuredStory && (
+        <section className="max-w-5xl mx-auto px-6 pb-16">
+          <FeaturedStory story={featuredStory} />
+        </section>
+      )}
 
       {/* ── FEATURE CARDS ─────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-6 pb-24">
