@@ -80,6 +80,7 @@ export default function AdminReviewsPage() {
   const fileInputRef = useRef(null);
 
   const [businessName, setBusinessName] = useState('');
+  const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
   const [date, setDate] = useState(today());
@@ -133,6 +134,7 @@ export default function AdminReviewsPage() {
       setUploadStatus('Publishing…');
       await setDoc(reviewRef, {
         businessName: businessName.trim(),
+        address: address.trim(),
         comment: comment.trim(),
         rating,
         date: Timestamp.fromDate(new Date(date + 'T12:00:00')),
@@ -140,6 +142,7 @@ export default function AdminReviewsPage() {
       });
 
       setBusinessName('');
+      setAddress('');
       setComment('');
       setRating(0);
       setDate(today());
@@ -178,6 +181,21 @@ export default function AdminReviewsPage() {
             value={businessName}
             onChange={e => setBusinessName(e.target.value)}
             placeholder="Santarpio's Pizza"
+            className="bg-neutral-900/60 border-neutral-800 rounded-lg px-4 py-3
+                       text-white placeholder:text-neutral-700 focus:outline-none
+                       focus:border-highlights/50 transition-colors shadow-none my-0"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">
+            Address
+          </label>
+          <input
+            type="text"
+            value={address}
+            onChange={e => setAddress(e.target.value)}
+            placeholder="123 Main St, Boston, MA"
             className="bg-neutral-900/60 border-neutral-800 rounded-lg px-4 py-3
                        text-white placeholder:text-neutral-700 focus:outline-none
                        focus:border-highlights/50 transition-colors shadow-none my-0"

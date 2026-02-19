@@ -107,6 +107,7 @@ export default function EditReviewPage() {
   const fileInputRef = useRef(null);
 
   const [businessName, setBusinessName] = useState('');
+  const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
   const [date, setDate] = useState('');
@@ -128,6 +129,7 @@ export default function EditReviewPage() {
         if (!snap.exists()) { setError('Review not found.'); return; }
         const data = snap.data();
         setBusinessName(data.businessName || '');
+        setAddress(data.address || '');
         setComment(data.comment || '');
         setRating(data.rating || 0);
         setDate(tsToDateInput(data.date));
@@ -193,6 +195,7 @@ export default function EditReviewPage() {
       setUploadStatus('Saving…');
       await updateDoc(doc(db, 'reviews', id), {
         businessName: businessName.trim(),
+        address: address.trim(),
         comment: comment.trim(),
         rating,
         date: Timestamp.fromDate(new Date(date + 'T12:00:00')),
@@ -248,6 +251,19 @@ export default function EditReviewPage() {
             className="bg-neutral-900/60 border-neutral-800 rounded-lg px-4 py-3
                        text-white focus:outline-none focus:border-highlights/50
                        transition-colors shadow-none my-0"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-xs uppercase tracking-[0.15em] text-neutral-500 font-semibold">Address</label>
+          <input
+            type="text"
+            value={address}
+            onChange={e => setAddress(e.target.value)}
+            placeholder="123 Main St, Boston, MA"
+            className="bg-neutral-900/60 border-neutral-800 rounded-lg px-4 py-3
+                       text-white placeholder:text-neutral-700 focus:outline-none
+                       focus:border-highlights/50 transition-colors shadow-none my-0"
           />
         </div>
 

@@ -315,6 +315,18 @@ export default function ReviewDetailPage() {
             </span>
           )}
         </div>
+        {review.address && (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(review.address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-lg
+                       border border-neutral-800 text-sm text-neutral-400
+                       hover:text-white hover:border-neutral-600 transition-colors duration-200"
+          >
+            <span>↗</span> Get Directions
+          </a>
+        )}
       </header>
 
       <div className="text-neutral-300 text-[17px] leading-8 whitespace-pre-line tracking-[0.01em]">
