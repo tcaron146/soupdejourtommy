@@ -60,6 +60,7 @@ export default function ProfilePage() {
       <div className="flex items-center gap-4 mb-6">
         <img
           src={userInfo.avatarUrl}
+          alt={userInfo.username || ""}
           className="w-20 h-20 rounded-full border border-neutral-700/30"
         />
         <div>

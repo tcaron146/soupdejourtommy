@@ -58,6 +58,7 @@ export default function ReviewsPage() {
     if (hasLoadedOnce.current) return;
     hasLoadedOnce.current = true;
     loadMore();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

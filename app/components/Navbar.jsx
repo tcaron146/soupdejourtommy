@@ -113,6 +113,7 @@ export default function Navbar() {
             >
               <img
                 src={avatarSrc}
+                alt={user.username || "profile"}
                 className="w-10 h-10 rounded-full border border-primary/40"
               />
               <p className="text-primary">{user.username}</p>

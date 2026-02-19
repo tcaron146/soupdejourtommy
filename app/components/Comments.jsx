@@ -141,6 +141,7 @@ function CommentItem({ comment, comments, postId }) {
         {/* Avatar */}
         <img
           src={comment.avatarUrl}
+          alt={comment.username || ""}
           className="w-7 h-7 rounded-full mt-1"
         />
 
