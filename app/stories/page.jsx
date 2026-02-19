@@ -11,7 +11,7 @@ export default function StoriesPage() {
 
   useEffect(() => {
     async function load() {
-      const q = query(collection(db, 'stories'), orderBy('title'));
+      const q = query(collection(db, 'stories'), orderBy('createdAt', 'desc'));
       const snap = await getDocs(q);
       setStories(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
