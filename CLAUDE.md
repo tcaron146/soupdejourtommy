@@ -6,7 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SoupDeJourTommy is a personal storytelling and food review platform. Content pillars: "Chronicles" (personal narratives) and food reviews. Users can create posts with images, follow each other, and subscribe to a newsletter.
 
-**Firebase project:** `soupdejourtommy-ba24e` (region: `us-west1`)
+**Deployment:** Vercel (production)
+**Firebase project:** `soupdejourtommy-ba24e` (Firestore + Storage only — not used for hosting)
 
 ## Commands
 
@@ -19,17 +20,12 @@ npm run start     # Run production server locally
 npm run lint      # ESLint (next/core-web-vitals)
 ```
 
-**Deploy to Firebase:**
-```bash
-firebase deploy
-```
-
 ## Tech Stack
 
 - **Framework**: Next.js 14.0.4 (App Router), React 18.2.0, TypeScript 5.3.3
 - **Styling**: Tailwind CSS 3.x with class-based dark mode
 - **Backend/DB**: Firebase — Auth, Firestore, Cloud Storage
-- **Hosting**: Firebase Hosting + Cloud Functions via `firebase-frameworks` (Next.js SSR)
+- **Hosting**: Vercel (deploys automatically from `main` branch)
 - **Email**: Mailchimp via `react-mailchimp-subscribe`; newsletter API route at `app/api/subscribeUser.js`
 
 > Note: `package-Toms.json` is an experimental version pinned to Next 16 / React 19. The canonical dependencies are in `package.json`.
@@ -60,7 +56,7 @@ firebase deploy
 ├── constants/index.ts      ← Nav link definitions
 ├── data/reviews.json       ← Static review data (188 entries)
 ├── public/                 ← Static assets (images, SVGs)
-├── firebase.json           ← Firebase hosting config (source: ".", frameworksBackend)
+├── firebase.json           ← Firebase CLI config (Firestore rules deploy only — not used for hosting)
 ├── firestore.rules         ← Firestore security rules
 ├── firestore.indexes.json  ← Firestore composite indexes
 ├── next.config.js          ← images.unoptimized: true, undici external for SSR
@@ -128,11 +124,14 @@ Dark mode strategy: `class` (toggle by adding `dark` class to `<html>`).
 
 ## Firestore Security Rules
 
-**Current state:** `firestore.rules` is set to `allow read, write: if false` — a complete lockdown placeholder. The app relies on client-side Firebase SDK with permissive rules in the Firebase console (not yet committed to this file). Before deploying rules changes, verify the console rules match what the app needs.
+**Current state:** Public reads allowed, all writes blocked. Deploy rule changes with:
+```bash
+firebase deploy --only firestore:rules
+```
 
 ## Environment Variables
 
-Required in `.env.local` (root):
+Required in `.env.local` locally and in the **Vercel project environment variables** for production:
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY
