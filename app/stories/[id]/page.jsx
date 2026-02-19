@@ -11,7 +11,7 @@ import {
   query,
 } from "firebase/firestore";
 import { db } from "@/app/firebase";
-import Link from "next/link";
+import StoryNav from "@/app/components/StoryNav";
 
 export default function StoryPage() {
   const { id } = useParams();
@@ -19,8 +19,8 @@ export default function StoryPage() {
   const [story, setStory] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [prevId, setPrevId] = useState(null);
-  const [nextId, setNextId] = useState(null);
+  const [prevStory, setPrevStory] = useState(null);
+  const [nextStory, setNextStory] = useState(null);
 
   useEffect(() => {
     if (!id) return;
@@ -35,22 +35,20 @@ export default function StoryPage() {
 
         setStory(snap.data());
 
-const q = query(
-  collection(db, 'stories'),
-  orderBy('date', 'asc'),
-  orderBy('__name__', 'asc')
-);
+        const q = query(
+          collection(db, "stories"),
+          orderBy("date", "asc"),
+          orderBy("__name__", "asc")
+        );
 
-const all = await getDocs(q);
-const ids = all.docs.map(d => d.id);
+        const all = await getDocs(q);
+        const docs = all.docs.map((d) => ({ id: d.id, title: d.data().title }));
 
-const index = ids.indexOf(id);
-if (index === -1) return;
+        const index = docs.findIndex((d) => d.id === id);
+        if (index === -1) return;
 
-setPrevId(index > 0 ? ids[index - 1] : null);
-setNextId(index < ids.length - 1 ? ids[index + 1] : null);
-
-
+        setPrevStory(index > 0 ? docs[index - 1] : null);
+        setNextStory(index < docs.length - 1 ? docs[index + 1] : null);
       } finally {
         setLoading(false);
       }
@@ -71,48 +69,9 @@ setNextId(index < ids.length - 1 ? ids[index + 1] : null);
     <article className="pt-32 max-w-3xl mx-auto px-4 text-white">
       <h1 className="text-3xl font-bold mb-6">{story.title}</h1>
 
-      <div className=" mb-12">{story.content}</div>
+      <div className="mb-12">{story.content}</div>
 
-      {/*Navigation */}
-<div className="mt-12 flex justify-between items-center border-t border-neutral-800 pt-6">
-  {prevId ? (
-    <Link
-      href={`/stories/${prevId}`}
-      className="flex items-center gap-2 px-3 py-2 rounded
-                 text-sm text-neutral-300 hover:text-white
-                 hover:bg-neutral-800 cursor-pointer select-none"
-    >
-      ← Previous
-    </Link>
-  ) : (
-    <span
-      className="flex items-center gap-2 px-3 py-2 rounded
-                 text-sm text-neutral-600 opacity-50 select-none"
-    >
-      ← Previous
-    </span>
-  )}
-
-  {nextId ? (
-    <Link
-      href={`/stories/${nextId}`}
-      className="flex items-center gap-2 px-3 py-2 rounded
-                 text-sm text-neutral-300 hover:text-white
-                 hover:bg-neutral-800 cursor-pointer select-none"
-    >
-      Next →
-    </Link>
-  ) : (
-    <span
-      className="flex items-center gap-2 px-3 py-2 rounded
-                 text-sm text-neutral-600 opacity-50 select-none"
-    >
-      Next →
-    </span>
-  )}
-</div>
-
-
+      <StoryNav prev={prevStory} next={nextStory} />
     </article>
   );
 }
