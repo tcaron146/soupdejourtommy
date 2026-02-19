@@ -40,7 +40,7 @@ export default function StoryPage() {
       try {
         const q = query(
           collection(db, "stories"),
-          orderBy("date", "asc")
+          orderBy("title", "asc")
         );
 
         const all = await getDocs(q);
