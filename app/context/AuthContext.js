@@ -18,6 +18,7 @@ const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // EMAIL LOGIN
   const emailSignIn = (email, password) =>
@@ -67,6 +68,7 @@ export const AuthContextProvider = ({ children }) => {
     const unsub = auth.onAuthStateChanged((fbUser) => {
       if (!fbUser) {
         setUser(null);
+        setAuthLoading(false);
         return;
       }
 
@@ -84,6 +86,7 @@ export const AuthContextProvider = ({ children }) => {
           bio: data.bio || "",
           birthday: data.birthday || "",
         });
+        setAuthLoading(false);
       });
 
       return () => unsubProfile();
@@ -96,6 +99,7 @@ export const AuthContextProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        authLoading,
         emailSignIn,
         emailSignUp,
         googleSignIn,

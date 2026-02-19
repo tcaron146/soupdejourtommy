@@ -6,10 +6,7 @@ import { AiOutlineClose } from "react-icons/ai";
 import { BsSearch } from "react-icons/bs";
 import { FaInstagram } from "react-icons/fa";
 import Link from "next/link";
-import { UserAuth } from "../context/AuthContext";
-
 export default function Navbar() {
-  const { user, logOut } = UserAuth() || {};
   const [nav, setNav] = useState(false);
   const navRef = useRef(null);
 
@@ -26,12 +23,6 @@ export default function Navbar() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [nav]);
-
-  // Provide guaranteed safe avatar
-  const avatarSrc =
-    user?.avatarUrl && user.avatarUrl.trim() !== ""
-      ? user.avatarUrl
-      : "/default-avatar.png";
 
   return (
     <div className="flex justify-between items-center w-full h-20 px-6 bg-secondary text-primary fixed top-0 left-0 z-20 shadow-md">
@@ -58,31 +49,6 @@ export default function Navbar() {
           <FaInstagram size={20} className="cursor-pointer" />
         </Link>
 
-        {/* LOGIN / PROFILE */}
-        {!user ? (
-          <Link href="/login" className="hover:text-accent">
-            Login
-          </Link>
-        ) : (
-          <div className="flex items-center gap-4">
-
-            {/* SAFE AVATAR */}
-            <Link href={`/profile/${user.uid}`}>
-              <img
-                src={avatarSrc}
-                alt="profile"
-                className="w-9 h-9 rounded-full cursor-pointer border border-primary/40 hover:opacity-80"
-              />
-            </Link>
-
-            <button
-              onClick={logOut}
-              className="hover:text-accent transition"
-            >
-              Logout
-            </button>
-          </div>
-        )}
       </div>
 
       {/* MOBILE HAMBURGER */}
@@ -121,42 +87,6 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* MOBILE PROFILE */}
-          {user && (
-            <Link
-              href={`/profile/${user.uid}`}
-              className="flex items-center gap-3 pt-5 pb-2"
-              onClick={() => setNav(false)}
-            >
-              <img
-                src={avatarSrc}
-                alt={user.username || "profile"}
-                className="w-9 h-9 rounded-full border border-neutral-700"
-              />
-              <p className="text-sm font-medium text-neutral-300">{user.username}</p>
-            </Link>
-          )}
-
-          {/* LOGIN / LOGOUT */}
-          <div className="pt-4 pb-5 mt-1">
-            {!user ? (
-              <Link
-                href="/login"
-                onClick={() => setNav(false)}
-                className="text-sm text-neutral-500 hover:text-white transition-colors duration-150"
-              >
-                Login
-              </Link>
-            ) : (
-              <button
-                onClick={() => { logOut(); setNav(false); }}
-                className="text-sm text-neutral-500 hover:text-white transition-colors
-                           border-0 shadow-none p-0 w-auto mt-0 font-normal"
-              >
-                Logout
-              </button>
-            )}
-          </div>
 
         </nav>
       </div>
