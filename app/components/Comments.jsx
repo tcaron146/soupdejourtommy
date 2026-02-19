@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { UserAuth } from "../context/AuthContext";
 
-export default function Comments({ postId }) {
+export default function Comments({ postId, collectionName = "posts" }) {
   const { user } = UserAuth() || {};
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
@@ -20,7 +20,7 @@ export default function Comments({ postId }) {
 
   useEffect(() => {
     const q = query(
-      collection(db, "posts", postId, "comments"),
+      collection(db, collectionName, postId, "comments"),
       orderBy("createdAt", "asc")
     );
 
@@ -29,13 +29,13 @@ export default function Comments({ postId }) {
     });
 
     return () => unsub();
-  }, [postId]);
+  }, [postId, collectionName]);
 
   const submitComment = async () => {
     if (!user) return alert("Login to comment");
     if (!text.trim()) return;
 
-    await addDoc(collection(db, "posts", postId, "comments"), {
+    await addDoc(collection(db, collectionName, postId, "comments"), {
       text: text.trim(),
       parentId: null,
       userId: user.uid,
@@ -84,6 +84,7 @@ export default function Comments({ postId }) {
             comments={comments}
             parentId={null}
             postId={postId}
+            collectionName={collectionName}
           />
         </>
       )}
@@ -92,7 +93,7 @@ export default function Comments({ postId }) {
 }
 
 /* COMMENT THREAD */
-function CommentThread({ comments, parentId, postId }) {
+function CommentThread({ comments, parentId, postId, collectionName }) {
   const filtered = comments.filter((c) => c.parentId === parentId);
 
   return (
@@ -103,6 +104,7 @@ function CommentThread({ comments, parentId, postId }) {
           comment={comment}
           comments={comments}
           postId={postId}
+          collectionName={collectionName}
         />
       ))}
     </div>
@@ -111,7 +113,7 @@ function CommentThread({ comments, parentId, postId }) {
 
 
 /* SINGLE COMMENT */
-function CommentItem({ comment, comments, postId }) {
+function CommentItem({ comment, comments, postId, collectionName }) {
   const { user } = UserAuth() || {};
   const [replying, setReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -119,7 +121,7 @@ function CommentItem({ comment, comments, postId }) {
   const submitReply = async () => {
     if (!replyText.trim()) return;
 
-    await addDoc(collection(db, "posts", postId, "comments"), {
+    await addDoc(collection(db, collectionName, postId, "comments"), {
       text: replyText.trim(),
       parentId: comment.id,
       userId: user.uid,
@@ -166,6 +168,7 @@ function CommentItem({ comment, comments, postId }) {
             comments={comments}
             parentId={comment.id}
             postId={postId}
+            collectionName={collectionName}
           />
         </div>
       </div>

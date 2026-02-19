@@ -6,9 +6,12 @@ import { AiOutlineClose } from "react-icons/ai";
 import { BsSearch } from "react-icons/bs";
 import { FaInstagram } from "react-icons/fa";
 import Link from "next/link";
+import { UserAuth } from "@/app/context/AuthContext";
+
 export default function Navbar() {
   const [nav, setNav] = useState(false);
   const navRef = useRef(null);
+  const { user, authLoading, logOut } = UserAuth() || {};
 
   const toggleNav = () => setNav((prev) => !prev);
 
@@ -49,6 +52,45 @@ export default function Navbar() {
           <FaInstagram size={20} className="cursor-pointer" />
         </Link>
 
+        {!authLoading && (
+          user ? (
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/profile/${user.uid}`}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.username || ""}
+                    className="w-8 h-8 rounded-full object-cover border border-neutral-700"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center text-sm font-medium">
+                    {user.username?.[0]?.toUpperCase() || "?"}
+                  </div>
+                )}
+                <span className="text-sm text-neutral-300">{user.username}</span>
+              </Link>
+              <button
+                onClick={logOut}
+                title="Log out"
+                className="text-xs text-neutral-500 hover:text-white transition-colors
+                           border-0 shadow-none p-0 w-auto mt-0 font-normal rounded-none"
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm text-neutral-300 hover:text-white transition-colors"
+            >
+              Log in
+            </Link>
+          )
+        )}
+
       </div>
 
       {/* MOBILE HAMBURGER */}
@@ -80,13 +122,62 @@ export default function Navbar() {
               onClick={() => setNav(false)}
               className="flex items-center justify-between py-4 border-b border-neutral-800/40
                          text-base font-medium text-neutral-300 hover:text-white
-                         transition-colors duration-150 last:border-0"
+                         transition-colors duration-150"
             >
               {label}
               <span className="text-neutral-700 text-sm">→</span>
             </Link>
           ))}
 
+          {!authLoading && (
+            user ? (
+              <>
+                <Link
+                  href={`/profile/${user.uid}`}
+                  onClick={() => setNav(false)}
+                  className="flex items-center justify-between py-4 border-b border-neutral-800/40
+                             text-base font-medium text-neutral-300 hover:text-white
+                             transition-colors duration-150"
+                >
+                  <span className="flex items-center gap-3">
+                    {user.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt=""
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-xs">
+                        {user.username?.[0]?.toUpperCase() || "?"}
+                      </div>
+                    )}
+                    {user.username}
+                  </span>
+                  <span className="text-neutral-700 text-sm">→</span>
+                </Link>
+                <button
+                  onClick={() => { logOut(); setNav(false); }}
+                  className="flex items-center justify-between py-4 last:border-0
+                             text-base font-medium text-neutral-500 hover:text-white
+                             transition-colors duration-150 border-0 shadow-none
+                             w-full text-left mt-0 rounded-none"
+                >
+                  Log out
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setNav(false)}
+                className="flex items-center justify-between py-4 last:border-0
+                           text-base font-medium text-neutral-300 hover:text-white
+                           transition-colors duration-150"
+              >
+                Log in
+                <span className="text-neutral-700 text-sm">→</span>
+              </Link>
+            )
+          )}
 
         </nav>
       </div>

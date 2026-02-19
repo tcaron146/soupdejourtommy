@@ -16,6 +16,8 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import StoryNav from '@/app/components/StoryNav';
 import ShareButtons from '@/app/components/ShareButtons';
+import SaveButton from '@/app/components/SaveButton';
+import Comments from '@/app/components/Comments';
 
 function Stars({ rating }) {
   return (
@@ -372,10 +374,17 @@ export default function ReviewDetailPage() {
         <p className="text-xs uppercase tracking-[0.2em] text-neutral-600 font-semibold mb-4">
           Share this review
         </p>
-        <ShareButtons
-          title={review.businessName}
-          text={`Check out my review of ${review.businessName}`}
-        />
+        <div className="flex items-center gap-6 flex-wrap">
+          <ShareButtons
+            title={review.businessName}
+            text={`Check out my review of ${review.businessName}`}
+          />
+          <SaveButton itemId={id} type="review" title={review.businessName} />
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <Comments postId={id} collectionName="reviews" />
       </div>
 
       {related.length > 0 && (

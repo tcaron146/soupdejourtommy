@@ -14,6 +14,8 @@ import { db } from "@/app/firebase";
 import Link from "next/link";
 import StoryNav from "@/app/components/StoryNav";
 import ShareButtons from "@/app/components/ShareButtons";
+import SaveButton from "@/app/components/SaveButton";
+import Comments from "@/app/components/Comments";
 
 const TEXT_CLASS = "text-neutral-300 text-[17px] leading-8 whitespace-pre-line tracking-[0.01em]";
 
@@ -166,7 +168,14 @@ export default function StoryDetail() {
         <p className="text-xs uppercase tracking-[0.2em] text-neutral-600 font-semibold mb-4">
           Share this story
         </p>
-        <ShareButtons title={story.title} text={story.title} />
+        <div className="flex items-center gap-6 flex-wrap">
+          <ShareButtons title={story.title} text={story.title} />
+          <SaveButton itemId={id} type="story" title={story.title} />
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <Comments postId={id} collectionName="stories" />
       </div>
 
       <StoryNav prev={prevStory} next={nextStory} />

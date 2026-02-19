@@ -8,6 +8,7 @@ import Link from 'next/link';
 export default function StoriesPage() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState('recent');
 
   useEffect(() => {
     async function load() {
@@ -18,6 +19,10 @@ export default function StoriesPage() {
     }
     load();
   }, []);
+
+  const sorted = sort === 'popular'
+    ? [...stories].sort((a, b) => (b.saveCount || 0) - (a.saveCount || 0))
+    : stories;
 
   return (
     <main className="pt-32 min-h-screen px-4">
@@ -34,6 +39,29 @@ export default function StoriesPage() {
           </p>
         </div>
 
+        {/* Sort toggle */}
+        <div className="flex items-center gap-1 mb-8">
+          <span className="text-xs text-neutral-600 mr-2">Sort:</span>
+          {[
+            { value: 'recent', label: 'Recent' },
+            { value: 'popular', label: 'Most Saved' },
+          ].map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setSort(value)}
+              className="px-3 py-1 rounded-full text-xs font-medium transition-colors duration-150
+                         border-0 shadow-none w-auto mt-0"
+              style={{
+                backgroundColor: sort === value ? 'rgb(var(--color-highlights) / 0.15)' : 'rgb(23,23,23)',
+                color: sort === value ? 'rgb(var(--color-highlights))' : 'rgb(115,115,115)',
+                outline: sort === value ? '1px solid rgb(var(--color-highlights) / 0.4)' : '1px solid rgb(38,38,38)',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         {/* List */}
         {loading ? (
           <div className="space-y-0">
@@ -46,7 +74,7 @@ export default function StoriesPage() {
           </div>
         ) : (
           <ol className="list-none">
-            {stories.map((story, index) => (
+            {sorted.map((story, index) => (
               <li key={story.id} className="group">
                 <Link href={`/stories/${story.id}`} prefetch={false}>
                   <div className="flex items-center gap-6 py-5 border-b border-neutral-800/40

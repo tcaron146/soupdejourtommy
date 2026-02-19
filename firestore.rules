@@ -14,18 +14,51 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null
                    && request.auth.uid == "K2iJ43LpAOSTR1BbAO8MYxGhGOO2";
+
+      // Allow any authenticated user to update saveCount by ±1 only
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['saveCount'])
+        && (request.resource.data.saveCount == resource.data.get('saveCount', 0) + 1
+         || request.resource.data.saveCount == resource.data.get('saveCount', 0) - 1);
+
+      // Comments on stories
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth != null
+                               && request.auth.uid == resource.data.userId;
+      }
     }
 
     match /reviews/{reviewId} {
       allow read: if true;
       allow write: if request.auth != null
                    && request.auth.uid == "K2iJ43LpAOSTR1BbAO8MYxGhGOO2";
+
+      // Allow any authenticated user to update saveCount by ±1 only
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['saveCount'])
+        && (request.resource.data.saveCount == resource.data.get('saveCount', 0) + 1
+         || request.resource.data.saveCount == resource.data.get('saveCount', 0) - 1);
+
+      // Comments on reviews
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth != null
+                               && request.auth.uid == resource.data.userId;
+      }
     }
 
     match /posts/{postId} {
       allow read: if true;
       allow write: if request.auth != null
                    && request.auth.uid == "K2iJ43LpAOSTR1BbAO8MYxGhGOO2";
+    }
+
+    // Users own their saved list
+    match /users/{userId}/saved/{itemId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

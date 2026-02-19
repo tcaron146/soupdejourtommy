@@ -24,6 +24,7 @@ export default function ReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeTag, setActiveTag] = useState(searchParams.get('tag') || '');
+  const [sort, setSort] = useState('recent');
   const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
@@ -46,11 +47,17 @@ export default function ReviewsPage() {
 
   const allTags = [...new Set(reviews.flatMap(r => r.tags || []))].sort();
 
-  const filtered = reviews.filter(r => {
-    const matchesSearch = !search.trim() || r.businessName?.toLowerCase().includes(search.toLowerCase());
-    const matchesTag = !activeTag || r.tags?.includes(activeTag);
-    return matchesSearch && matchesTag;
-  });
+  const filtered = reviews
+    .filter(r => {
+      const matchesSearch = !search.trim() || r.businessName?.toLowerCase().includes(search.toLowerCase());
+      const matchesTag = !activeTag || r.tags?.includes(activeTag);
+      return matchesSearch && matchesTag;
+    })
+    .sort((a, b) =>
+      sort === 'popular'
+        ? (b.saveCount || 0) - (a.saveCount || 0)
+        : 0
+    );
 
   return (
     <main className="pt-32 min-h-screen px-4">
@@ -114,6 +121,29 @@ export default function ReviewsPage() {
             ))}
           </div>
         )}
+
+        {/* Sort toggle */}
+        <div className="flex items-center gap-1 mb-8">
+          <span className="text-xs text-neutral-600 mr-2">Sort:</span>
+          {[
+            { value: 'recent', label: 'Recent' },
+            { value: 'popular', label: 'Most Saved' },
+          ].map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setSort(value)}
+              className="px-3 py-1 rounded-full text-xs font-medium transition-colors duration-150
+                         border-0 shadow-none w-auto mt-0"
+              style={{
+                backgroundColor: sort === value ? 'rgb(var(--color-highlights) / 0.15)' : 'rgb(23,23,23)',
+                color: sort === value ? 'rgb(var(--color-highlights))' : 'rgb(115,115,115)',
+                outline: sort === value ? '1px solid rgb(var(--color-highlights) / 0.4)' : '1px solid rgb(38,38,38)',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         {/* Grid */}
         {loading ? (

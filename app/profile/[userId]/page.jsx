@@ -3,21 +3,26 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { db } from "@/app/firebase";
-import { collection, doc, getDoc, getCountFromServer } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+} from "firebase/firestore";
 import Link from "next/link";
 import { UserAuth } from "@/app/context/AuthContext";
-import { followUser, unfollowUser } from "@/app/utils/followActions";
+import EditProfileModal from "@/app/components/EditProfileModal";
 
 export default function ProfilePage() {
   const { userId } = useParams();
   const { user: currentUser } = UserAuth() || {};
 
   const [userInfo, setUserInfo] = useState(null);
-  const [followerCount, setFollowerCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [followLoading, setFollowLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [savedItems, setSavedItems] = useState([]);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const isOwnProfile = currentUser?.uid === userId;
 
@@ -26,22 +31,8 @@ export default function ProfilePage() {
 
     async function load() {
       try {
-        const [userSnap, followersSnap, followingSnap] = await Promise.all([
-          getDoc(doc(db, "users", userId)),
-          getCountFromServer(collection(db, "users", userId, "followers")),
-          getCountFromServer(collection(db, "users", userId, "following")),
-        ]);
-
+        const userSnap = await getDoc(doc(db, "users", userId));
         if (userSnap.exists()) setUserInfo(userSnap.data());
-        setFollowerCount(followersSnap.data().count);
-        setFollowingCount(followingSnap.data().count);
-
-        if (currentUser && !isOwnProfile) {
-          const followSnap = await getDoc(
-            doc(db, "users", currentUser.uid, "following", userId)
-          );
-          setIsFollowing(followSnap.exists());
-        }
       } catch {
         // silently fail
       } finally {
@@ -50,24 +41,24 @@ export default function ProfilePage() {
     }
 
     load();
-  }, [userId, currentUser, isOwnProfile]);
+  }, [userId]);
 
-  async function handleFollow() {
-    if (!currentUser || followLoading) return;
-    setFollowLoading(true);
-    try {
-      if (isFollowing) {
-        await unfollowUser(currentUser.uid, userId);
-        setIsFollowing(false);
-        setFollowerCount(c => c - 1);
-      } else {
-        await followUser(currentUser.uid, userId);
-        setIsFollowing(true);
-        setFollowerCount(c => c + 1);
-      }
-    } catch { /* silently fail */ }
-    finally { setFollowLoading(false); }
-  }
+  useEffect(() => {
+    if (!isOwnProfile || !userId) return;
+
+    async function loadSaved() {
+      try {
+        const q = query(
+          collection(db, "users", userId, "saved"),
+          orderBy("savedAt", "desc")
+        );
+        const snap = await getDocs(q);
+        setSavedItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      } catch { /* silently fail */ }
+    }
+
+    loadSaved();
+  }, [isOwnProfile, userId]);
 
   if (loading) {
     return (
@@ -94,6 +85,9 @@ export default function ProfilePage() {
     );
   }
 
+  const savedReviews = savedItems.filter((s) => s.type === "review");
+  const savedStories = savedItems.filter((s) => s.type === "story");
+
   return (
     <main className="pt-28 max-w-2xl mx-auto px-6 pb-20">
 
@@ -118,19 +112,14 @@ export default function ProfilePage() {
             <h1 className="text-xl font-bold text-white tracking-tight">
               {userInfo.username}
             </h1>
-            {!isOwnProfile && currentUser && (
+            {isOwnProfile && (
               <button
-                onClick={handleFollow}
-                disabled={followLoading}
+                onClick={() => setShowEditModal(true)}
                 className="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200
-                           border-0 shadow-none w-auto mt-0 disabled:opacity-50"
-                style={{
-                  backgroundColor: isFollowing ? 'transparent' : 'rgb(var(--color-highlights) / 0.9)',
-                  color: isFollowing ? 'rgb(115,115,115)' : 'white',
-                  outline: isFollowing ? '1px solid rgb(38,38,38)' : 'none',
-                }}
+                           border border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-500
+                           shadow-none w-auto mt-0"
               >
-                {followLoading ? '…' : isFollowing ? 'Following' : 'Follow'}
+                Edit Profile
               </button>
             )}
           </div>
@@ -139,38 +128,82 @@ export default function ProfilePage() {
             <p className="text-sm text-neutral-400 mt-2 leading-relaxed">{userInfo.bio}</p>
           )}
 
-          {/* Stats */}
-          <div className="flex items-center gap-5 mt-3">
-            <div className="text-center">
-              <p className="text-sm font-semibold text-white">{followerCount}</p>
-              <p className="text-xs text-neutral-600">Followers</p>
-            </div>
-            <div className="w-px h-6 bg-neutral-800" />
-            <div className="text-center">
-              <p className="text-sm font-semibold text-white">{followingCount}</p>
-              <p className="text-xs text-neutral-600">Following</p>
-            </div>
-            {userInfo.createdAt && (
-              <>
-                <div className="w-px h-6 bg-neutral-800" />
-                <p className="text-xs text-neutral-600">
-                  Joined {(userInfo.createdAt.toDate
-                    ? userInfo.createdAt.toDate()
-                    : new Date(userInfo.createdAt)
-                  ).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </p>
-              </>
-            )}
-          </div>
+          {userInfo.createdAt && (
+            <p className="text-xs text-neutral-600 mt-3">
+              Joined {(userInfo.createdAt.toDate
+                ? userInfo.createdAt.toDate()
+                : new Date(userInfo.createdAt)
+              ).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="border-t border-neutral-800/60 pt-10">
-        <p className="text-sm text-neutral-600 text-center">
-          Stories and reviews coming soon.
-        </p>
-      </div>
+      {/* Saved items — owner only */}
+      {isOwnProfile && (
+        <div className="border-t border-neutral-800/60 pt-10 space-y-10">
+          {savedReviews.length > 0 && (
+            <section>
+              <p className="text-xs uppercase tracking-[0.2em] text-neutral-600 font-semibold mb-4">
+                Saved Reviews
+              </p>
+              <div className="flex flex-col gap-2">
+                {savedReviews.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/reviews/${item.itemId}`}
+                    className="flex items-center justify-between py-3 border-b border-neutral-800/40
+                               hover:border-neutral-700 transition-colors group"
+                  >
+                    <span className="text-sm text-neutral-300 group-hover:text-white transition-colors">
+                      {item.title}
+                    </span>
+                    <span className="text-neutral-700 group-hover:text-highlights group-hover:translate-x-1
+                                     transition-all duration-200 text-sm shrink-0">→</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
+          {savedStories.length > 0 && (
+            <section>
+              <p className="text-xs uppercase tracking-[0.2em] text-neutral-600 font-semibold mb-4">
+                Saved Stories
+              </p>
+              <div className="flex flex-col gap-2">
+                {savedStories.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/stories/${item.itemId}`}
+                    className="flex items-center justify-between py-3 border-b border-neutral-800/40
+                               hover:border-neutral-700 transition-colors group"
+                  >
+                    <span className="text-sm text-neutral-300 group-hover:text-white transition-colors">
+                      {item.title}
+                    </span>
+                    <span className="text-neutral-700 group-hover:text-highlights group-hover:translate-x-1
+                                     transition-all duration-200 text-sm shrink-0">→</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {savedItems.length === 0 && (
+            <p className="text-sm text-neutral-600">Nothing saved yet.</p>
+          )}
+        </div>
+      )}
+
+      {showEditModal && (
+        <EditProfileModal
+          userId={userId}
+          currentBio={userInfo.bio}
+          currentAvatar={userInfo.avatarUrl}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
     </main>
   );
 }
